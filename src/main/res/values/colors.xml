@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="she_bg_blue">#A5B4D3</color>
+    <color name="she_red">#E53935</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="text_hint">#808080</color>
+    <color name="avatar_blue">#3F51B5</color>
+</resources>
