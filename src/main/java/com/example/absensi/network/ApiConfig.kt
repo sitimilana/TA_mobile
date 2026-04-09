@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiConfig {
     // SANGAT PENTING: Jika Anda pakai emulator, localhost Laravel itu alamatnya 10.0.2.2, BUKAN 127.0.0.1!
     // Ganti dengan IP komputer Anda (misal: 192.168.1.10) jika Anda menguji pakai HP asli.
-    private const val BASE_URL = "http://192.168.0.9:8000/api/"
+    private const val BASE_URL = "http://192.168.110.179:8000/api/"
 
     fun getApiService(): ApiService {
         val loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)

@@ -9,5 +9,12 @@ data class LoginResponse(
 )
 
 data class DataPayload(
-    @SerializedName("token") val token: String
+    @SerializedName("token") val token: String,
+    @SerializedName("user") val user: UserModel?
+)
+
+data class UserModel(
+    @SerializedName("id_user") val idUser: Int,
+    @SerializedName("username") val username: String,
+    @SerializedName("nama_lengkap") val namaLengkap: String
 )

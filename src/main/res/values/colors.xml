@@ -6,4 +6,9 @@
     <color name="white">#FFFFFFFF</color>
     <color name="text_hint">#808080</color>
     <color name="avatar_blue">#3F51B5</color>
+
+    <color name="bg_dashboard">#B5C2E1</color>
+    <color name="btn_attendance">#3F4E91</color>
+    <color name="role_text">#E53935</color>
 </resources>
+

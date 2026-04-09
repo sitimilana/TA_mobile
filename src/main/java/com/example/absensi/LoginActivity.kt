@@ -1,5 +1,4 @@
-package com.example.absensi // GANTI dengan nama package aplikasi Anda
-
+package com.example.absensi
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -7,6 +6,7 @@ import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.LoginResponse
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
+import android.content.Intent
 
 class LoginActivity : AppCompatActivity() {
 
@@ -39,17 +39,37 @@ class LoginActivity : AppCompatActivity() {
                     override fun onResponse(call: retrofit2.Call<LoginResponse>, response: retrofit2.Response<LoginResponse>) {
                         if (response.isSuccessful && response.body()?.success == true) {
                             val token = response.body()?.data?.token
-                            Toast.makeText(this@LoginActivity, "Login Berhasil! Token: $token", Toast.LENGTH_LONG).show()
+                            val namaLengkap = response.body()?.data?.user?.namaLengkap
+                            val username = response.body()?.data?.user?.username
 
-                            // Nanti pindah ke dashboard di sini
+                            // 1. Simpan Token dan Nama ke SharedPreferences (Brankas HP)
+                            val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+                            val editor = sharedPref.edit()
+                            editor.putString("TOKEN", token)
+                            editor.putString("NAMA_LENGKAP", namaLengkap)
+                            editor.putString("USERNAME", username)
+                            editor.apply()
+                            Toast.makeText(this@LoginActivity, "Selamat Datang, $namaLengkap!", Toast.LENGTH_SHORT).show()
+
+                            val intent = Intent(this@LoginActivity, DashboardActivity::class.java)
+                            startActivity(intent)
+                            finish()
 
                         } else {
-                            // PERBAIKAN: Baca pesan error ASLI dari Laravel
                             try {
-                                val errorBody = response.errorBody()?.string()
-                                Toast.makeText(this@LoginActivity, "Server Menolak: $errorBody", Toast.LENGTH_LONG).show()
+                                // Jangan baca seluruh string jika body-nya terlalu besar
+                                val errorBody = response.errorBody()
+                                val errorString = errorBody?.string() ?: "Gagal"
+
+                                // JIKA ISINYA HTML (Ciri-ciri error 500 Laravel)
+                                if (errorString.contains("<!DOCTYPE html>") || errorString.contains("<html>")) {
+                                    Toast.makeText(this@LoginActivity, "Server sedang Error (500). Cek Laravel Log!", Toast.LENGTH_LONG).show()
+                                } else {
+                                    // Jika isinya JSON pendek biasa
+                                    Toast.makeText(this@LoginActivity, "Login Gagal: Cek Username/Password", Toast.LENGTH_LONG).show()
+                                }
                             } catch (e: Exception) {
-                                Toast.makeText(this@LoginActivity, "Error tidak diketahui", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@LoginActivity, "Terjadi kesalahan sistem", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
