@@ -37,18 +37,29 @@ class LoginActivity : AppCompatActivity() {
 
                     // Jika berhasil terhubung ke server (Walaupun password salah, tetap masuk sini selama server hidup)
                     override fun onResponse(call: retrofit2.Call<LoginResponse>, response: retrofit2.Response<LoginResponse>) {
-                        if (response.isSuccessful && response.body()?.success == true) {
-                            val token = response.body()?.data?.token
-                            val namaLengkap = response.body()?.data?.user?.namaLengkap
-                            val username = response.body()?.data?.user?.username
+                        // Ambil body response satu kali saja untuk efisiensi
+                        val body = response.body()
 
-                            // 1. Simpan Token dan Nama ke SharedPreferences (Brankas HP)
+                        if (response.isSuccessful && body?.success == true) {
+                            // Definisikan 'data' agar bisa digunakan di bawahnya
+                            val data = body.data
+
+                            // Sekarang variabel 'data' sudah dikenali
+                            val idUser = data?.user?.idUser.toString()
+                            val token = data?.token
+                            val namaLengkap = data?.user?.namaLengkap
+                            val username = data?.user?.username
+
+                            // 1. Simpan ke SharedPreferences
                             val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
                             val editor = sharedPref.edit()
+
+                            editor.putString("ID_USER", idUser)
                             editor.putString("TOKEN", token)
                             editor.putString("NAMA_LENGKAP", namaLengkap)
                             editor.putString("USERNAME", username)
                             editor.apply()
+
                             Toast.makeText(this@LoginActivity, "Selamat Datang, $namaLengkap!", Toast.LENGTH_SHORT).show()
 
                             val intent = Intent(this@LoginActivity, DashboardActivity::class.java)

@@ -18,8 +18,8 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import com.example.absensi.network.ApiConfig // Ganti sesuai package Anda
-import com.example.absensi.network.LoginResponse // Ganti sesuai package Anda
+import com.example.absensi.network.ApiConfig
+import com.example.absensi.network.LoginResponse
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -40,28 +40,30 @@ class PresensiActivity : AppCompatActivity() {
     private lateinit var viewFinder: PreviewView
     private lateinit var btnCapture: View
     private lateinit var tvTitlePresensi: TextView
+    private lateinit var tvWelcomeName: TextView
+    private lateinit var tvRole: TextView
 
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    // Variabel Penampung Data
     private var currentLat: Double = 0.0
     private var currentLon: Double = 0.0
-    private var jenisAbsen: String = "masuk" // Akan diubah berdasarkan dari dashboard
+    private var jenisAbsen: String = "masuk"
 
-    // 1. Meminta Izin Kamera dan Lokasi
+    // KOORDINAT KANTOR (Pastikan ini sesuai lokasi Anda saat ini jika memakai HP asli)
+    private val OFFICE_LAT = -7.7509239
+    private val OFFICE_LON = 111.9946412
+    private val MAX_RADIUS = 100.0 // Saya naikkan ke 100 meter agar lebih toleran saat testing
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
-            val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-
-            if (cameraGranted && locationGranted) {
+            if (permissions[Manifest.permission.CAMERA] == true && permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
                 startCamera()
                 getLocation()
             } else {
                 Toast.makeText(this, "Izin Kamera & Lokasi wajib diberikan!", Toast.LENGTH_LONG).show()
-                finish() // Keluar jika tidak diizinkan
+                finish()
             }
         }
 
@@ -69,18 +71,25 @@ class PresensiActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_presensi)
 
+        // 1. Inisialisasi View
         viewFinder = findViewById(R.id.viewFinder)
         btnCapture = findViewById(R.id.btnCapture)
         tvTitlePresensi = findViewById(R.id.tvTitlePresensi)
+        tvWelcomeName = findViewById(R.id.tvWelcomeName)
+        tvRole = findViewById(R.id.tvRole)
 
-        // Menerima data "jenis" dari Dashboard (Masuk atau Pulang)
+        // 2. Ambil Data User (Sama seperti Dashboard)
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
+        tvWelcomeName.text = "Selamat Datang, $namaLengkap"
+        tvRole.text = "Karyawan"
+
         jenisAbsen = intent.getStringExtra("JENIS_ABSEN") ?: "masuk"
         tvTitlePresensi.text = "Presensi ${jenisAbsen.uppercase()}"
 
         cameraExecutor = Executors.newSingleThreadExecutor()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Cek Izin
         if (allPermissionsGranted()) {
             startCamera()
             getLocation()
@@ -92,45 +101,36 @@ class PresensiActivity : AppCompatActivity() {
             ))
         }
 
-        // Aksi Tombol Jepret
         btnCapture.setOnClickListener {
             if (currentLat == 0.0) {
-                Toast.makeText(this, "Mencari lokasi GPS... Coba lagi.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Mencari lokasi GPS... Tunggu sampai 'Lokasi Terkunci' muncul.", Toast.LENGTH_SHORT).show()
                 getLocation()
-            } else {
+            } else if (checkLocationStatus(currentLat, currentLon)) {
                 takePhoto()
             }
         }
     }
 
-    // 2. Menghidupkan Kamera Depan (Selfie)
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+    private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
+        val results = FloatArray(1)
+        Location.distanceBetween(userLat, userLon, OFFICE_LAT, OFFICE_LON, results)
+        val distanceInMeters = results[0]
 
-        cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+        // LOG UNTUK DEBUGGING (Cek di Logcat dengan filter "ABSENSI_DEBUG")
+        Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
+        Log.d("ABSENSI_DEBUG", "Jarak ke Kantor: $distanceInMeters meter")
 
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(viewFinder.surfaceProvider)
-                }
-
-            imageCapture = ImageCapture.Builder().build()
-
-            // Memilih Kamera Depan
-            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
-            } catch (exc: Exception) {
-                Log.e("CameraX", "Use case binding failed", exc)
-            }
-        }, ContextCompat.getMainExecutor(this))
+        return if (distanceInMeters <= MAX_RADIUS) {
+            true
+        } else {
+            Toast.makeText(this, "Gagal! Jarak Anda ${distanceInMeters.toInt()}m dari kantor (Maks ${MAX_RADIUS.toInt()}m)", Toast.LENGTH_LONG).show()
+            false
+        }
     }
 
-    // 3. Mengambil Lokasi GPS
+    // Fungsi lainnya (startCamera, getLocation, takePhoto, uploadKeLaravel) tetap sama seperti sebelumnya...
+    // [Gunakan kode fungsi pendukung dari jawaban saya sebelumnya untuk menghemat tempat]
+
     @SuppressLint("MissingPermission")
     private fun getLocation() {
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
@@ -142,80 +142,76 @@ class PresensiActivity : AppCompatActivity() {
         }
     }
 
-    // 4. Proses Jepret Foto
-    private fun takePhoto() {
-        val imageCapture = imageCapture ?: return
-
-        // Simpan foto di memori sementara (Cache) agar tidak menuh-menuhin HP
-        val photoFile = File(
-            cacheDir,
-            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis()) + ".jpg"
-        )
-
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-
-        Toast.makeText(this, "Memproses gambar...", Toast.LENGTH_SHORT).show()
-
-        imageCapture.takePicture(
-            outputOptions,
-            ContextCompat.getMainExecutor(this),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    Toast.makeText(this@PresensiActivity, "Gagal mengambil foto.", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    // Jika sukses foto, langsung kirim ke Laravel
-                    uploadKeLaravel(photoFile)
-                }
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(viewFinder.surfaceProvider)
             }
-        )
+            imageCapture = ImageCapture.Builder().build()
+            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+            } catch (exc: Exception) {
+                Log.e("CameraX", "Use case binding failed", exc)
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
-    // 5. Mengirim File dan Data ke API Laravel
+    private fun takePhoto() {
+        val imageCapture = imageCapture ?: return
+        val photoFile = File(cacheDir, SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis()) + ".jpg")
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+        btnCapture.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction {
+            btnCapture.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100)
+        }
+
+        imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(this), object : ImageCapture.OnImageSavedCallback {
+            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                uploadKeLaravel(photoFile)
+            }
+            override fun onError(exc: ImageCaptureException) {
+                Toast.makeText(this@PresensiActivity, "Gagal ambil foto", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
     private fun uploadKeLaravel(fotoFile: File) {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val idUserString = sharedPref.getString("ID_USER", "")
+        if (idUserString.isNullOrEmpty()) {
+            Toast.makeText(this, "Sesi login habis, silakan login ulang", Toast.LENGTH_LONG).show()
+            return
+        }
 
-        // Asumsi saat login Anda menyimpan ID_USER. Pastikan ini ada!
-        val idUserString = sharedPref.getString("ID_USER", "1") ?: "1"
-
-        // Mengubah data teks menjadi RequestBody
         val idUser = idUserString.toRequestBody("text/plain".toMediaTypeOrNull())
         val jenis = jenisAbsen.toRequestBody("text/plain".toMediaTypeOrNull())
         val lat = currentLat.toString().toRequestBody("text/plain".toMediaTypeOrNull())
         val lon = currentLon.toString().toRequestBody("text/plain".toMediaTypeOrNull())
 
-        // Mengubah File gambar menjadi MultipartBody
         val requestImageFile = fotoFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
         val fotoMultipart = MultipartBody.Part.createFormData("foto", fotoFile.name, requestImageFile)
-
-        Toast.makeText(this, "Mengirim absen ke server...", Toast.LENGTH_SHORT).show()
 
         ApiConfig.getApiService().submitAbsensi(idUser, jenis, lat, lon, fotoMultipart)
             .enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     if (response.isSuccessful && response.body()?.success == true) {
-                        Toast.makeText(this@PresensiActivity, "Absen $jenisAbsen BERHASIL!", Toast.LENGTH_LONG).show()
-                        finish() // Tutup halaman kamera, kembali ke Dashboard
+                        Toast.makeText(this@PresensiActivity, "Absen Berhasil!", Toast.LENGTH_SHORT).show()
+                        finish()
                     } else {
-                        // Jika ada pesan error dari Laravel (misal: "Anda sudah absen")
-                        val errorMessage = response.body()?.message ?: "Gagal absen."
-                        Toast.makeText(this@PresensiActivity, errorMessage, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@PresensiActivity, response.body()?.message ?: "Gagal", Toast.LENGTH_SHORT).show()
                     }
                 }
-
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    Toast.makeText(this@PresensiActivity, "Koneksi Error: ${t.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@PresensiActivity, "Koneksi Error", Toast.LENGTH_SHORT).show()
                 }
             })
     }
 
-    private fun allPermissionsGranted() = arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    ).all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
-    }
+    private fun allPermissionsGranted() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
     override fun onDestroy() {
         super.onDestroy()
