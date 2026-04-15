@@ -211,11 +211,46 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@android:drawable/ic_menu_today" app:tint="@color/avatar_blue"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@android:drawable/ic_menu_myplaces" app:tint="#888888"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@android:drawable/ic_menu_agenda" app:tint="#888888"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@android:drawable/btn_star_big_off" app:tint="#888888"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@android:drawable/ic_menu_manage" app:tint="#888888"/>
+        <!-- HOME -->
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_weight="1"
+            android:src="@drawable/home"
+            android:scaleType="centerInside"/>
+
+        <!-- PENGAJUAN CUTI -->
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_weight="1"
+            android:src="@drawable/p_cuti"
+            android:scaleType="centerInside"/>
+
+        <!-- PENILAIAN KINERJA -->
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_weight="1"
+            android:src="@drawable/penilaian_"
+            android:scaleType="centerInside"/>
+
+        <!-- REWARD -->
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_weight="1"
+            android:src="@drawable/reward"
+            android:scaleType="centerInside"/>
+
+        <!-- SLIP GAJI -->
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_weight="1"
+            android:src="@drawable/slip_gaji"
+            android:scaleType="centerInside"/>
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
