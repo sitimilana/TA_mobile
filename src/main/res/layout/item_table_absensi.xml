@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="14dp"
+        android:paddingHorizontal="8dp"
+        android:weightSum="10"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvNo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:text="1"
+            android:textColor="@color/black"
+            android:textSize="12sp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/tvTanggal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:text="19 Apr 2026"
+            android:textColor="@color/black"
+            android:textSize="12sp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/tvMasuk"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text="07:45"
+            android:textColor="@color/black"
+            android:textSize="12sp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/tvPulang"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text="16:10"
+            android:textColor="@color/black"
+            android:textSize="12sp"
+            android:gravity="center"/>
+
+        <ImageView
+            android:id="@+id/ivStatus"
+            android:layout_width="0dp"
+            android:layout_height="18dp"
+            android:layout_weight="1.5"
+            android:src="@android:drawable/presence_online"
+            app:tint="#28A745" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F0F0"/>
+</LinearLayout>

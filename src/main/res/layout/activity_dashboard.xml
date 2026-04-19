@@ -15,15 +15,16 @@
         android:padding="20dp"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivProfile"
             android:layout_width="65dp"
             android:layout_height="65dp"
             android:src="@drawable/profile"
+            android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/avatar_blue" />
+            app:shapeAppearanceOverlay="@style/CircleImageView" />
 
         <LinearLayout
             android:id="@+id/textContainer"
@@ -211,23 +212,26 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- HOME -->
         <ImageView
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
             android:src="@drawable/home"
-            android:scaleType="centerInside"/>
+            android:scaleType="centerInside"
+            app:tint="@color/avatar_blue" /> <ImageView
+        android:layout_width="0dp"
+        android:layout_height="26dp"
+        android:layout_weight="1"
+        android:src="@drawable/p_cuti"
+        android:scaleType="centerInside"/>
 
-        <!-- PENGAJUAN CUTI -->
         <ImageView
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
-            android:src="@drawable/p_cuti"
+            android:src="@drawable/slip_gaji"
             android:scaleType="centerInside"/>
 
-        <!-- PENILAIAN KINERJA -->
         <ImageView
             android:layout_width="0dp"
             android:layout_height="26dp"
@@ -235,20 +239,11 @@
             android:src="@drawable/penilaian_"
             android:scaleType="centerInside"/>
 
-        <!-- REWARD -->
         <ImageView
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
             android:src="@drawable/reward"
-            android:scaleType="centerInside"/>
-
-        <!-- SLIP GAJI -->
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="26dp"
-            android:layout_weight="1"
-            android:src="@drawable/slip_gaji"
             android:scaleType="centerInside"/>
 
     </LinearLayout>

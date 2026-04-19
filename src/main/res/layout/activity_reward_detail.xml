@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dashboard">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivProfile"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/profile"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/CircleImageView"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile"
+            app:layout_constraintEnd_toStartOf="@+id/ivLogoHeader"
+            app:layout_constraintStart_toEndOf="@id/ivProfile"
+            app:layout_constraintTop_toTopOf="@id/ivProfile">
+
+            <TextView
+                android:id="@+id/tvWelcomeName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selamat Datang, Ahmad"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvRole"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Staff Keuangan"
+                android:textColor="@color/role_text"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivLogoHeader"
+            android:layout_width="60dp"
+            android:layout_height="35dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/logoshe"
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ivProfile" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tvRewardDetailTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Detail Reward &amp; Recognition"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardRewardDetail"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#EAEAEA"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintTop_toBottomOf="@id/tvRewardDetailTitle">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <ImageView
+                    android:id="@+id/ivBigTrophy"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:src="@drawable/trophy"
+                    app:tint="@color/avatar_blue"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="32dp"/>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Nama Reward" />
+                    <TextView style="@style/SalaryValue" android:text="Employee of the Month" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Jenis Reward" />
+                    <TextView style="@style/SalaryValue" android:text="Penghargaan Bulanan" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Tanggal" />
+                    <TextView style="@style/SalaryValue" android:text="25 April 2026" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Nilai Kinerja" />
+                    <TextView style="@style/SalaryValue" android:text="42" android:textColor="@color/avatar_blue" android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem" android:layout_marginTop="8dp">
+                    <TextView style="@style/SalaryLabel" android:text="Alasan" android:textColor="@color/black" />
+                    <TextView style="@style/SalaryValue" android:text="Pencapaian target luar biasa dan kedisiplinan tinggi." android:textColor="@color/black" android:gravity="end" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="@color/white"
+        android:elevation="16dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/home" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/p_cuti" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/slip_gaji" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/penilaian_" app:tint="@color/avatar_blue"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/reward" app:tint="#888888"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

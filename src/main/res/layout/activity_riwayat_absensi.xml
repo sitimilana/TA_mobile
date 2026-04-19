@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dashboard">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivProfile"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/profile"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/CircleImageView"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile"
+            app:layout_constraintEnd_toStartOf="@+id/ivLogoHeader"
+            app:layout_constraintStart_toEndOf="@id/ivProfile"
+            app:layout_constraintTop_toTopOf="@id/ivProfile">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selamat Datang, Ahmad"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Staff Keuangan"
+                android:textColor="@color/role_text"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivLogoHeader"
+            android:layout_width="60dp"
+            android:layout_height="35dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/logoshe"
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ivProfile" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Riwayat Absensi"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputSearch"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="16dp"
+        app:boxBackgroundColor="@color/white"
+        app:boxCornerRadiusBottomEnd="16dp"
+        app:boxCornerRadiusBottomStart="16dp"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:boxStrokeWidth="0dp"
+        app:boxStrokeWidthFocused="1dp"
+        app:boxStrokeColor="@color/avatar_blue"
+        app:startIconDrawable="@android:drawable/ic_menu_search"
+        app:startIconTint="@color/avatar_blue"
+        app:hintEnabled="false"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Cari..."
+            android:inputType="text"
+            android:paddingVertical="12dp"
+            android:textSize="14sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutFilter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@id/inputSearch">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_spinner_outlined">
+            <Spinner android:id="@+id/spinnerTgl" android:layout_width="match_parent" android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1.2"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_spinner_outlined">
+            <Spinner android:id="@+id/spinnerBulan" android:layout_width="match_parent" android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_spinner_outlined">
+            <Spinner android:id="@+id/spinnerTahun" android:layout_width="match_parent" android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:text="Filter"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/avatar_blue"
+            app:cornerRadius="10dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"/>
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#EAEAEA"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintTop_toBottomOf="@id/layoutFilter">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#F4F6F8"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="8dp"
+                android:weightSum="10">
+
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="No" android:textColor="@color/black" android:textStyle="bold" android:textSize="12sp" android:gravity="center"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="3" android:text="Tanggal" android:textColor="@color/black" android:textStyle="bold" android:textSize="12sp" android:gravity="center"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="Masuk" android:textColor="@color/black" android:textStyle="bold" android:textSize="12sp" android:gravity="center"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="Pulang" android:textColor="@color/black" android:textStyle="bold" android:textSize="12sp" android:gravity="center"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Status" android:textColor="@color/black" android:textStyle="bold" android:textSize="12sp" android:gravity="center"/>
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EAEAEA"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTableAbsensi"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_table_absensi" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="@color/white"
+        android:elevation="16dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/home" app:tint="@color/avatar_blue"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/p_cuti" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/slip_gaji" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/penilaian_" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/reward" app:tint="#888888"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

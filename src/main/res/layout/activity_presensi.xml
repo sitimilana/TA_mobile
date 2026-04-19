@@ -134,7 +134,7 @@
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
-            android:src="@drawable/penilaian_"
+            android:src="@drawable/slip_gaji"
             android:scaleType="centerInside"/>
 
         <!-- REWARD -->
@@ -142,7 +142,7 @@
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
-            android:src="@drawable/reward"
+            android:src="@drawable/penilaian_"
             android:scaleType="centerInside"/>
 
         <!-- SLIP GAJI -->
@@ -150,7 +150,7 @@
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
-            android:src="@drawable/slip_gaji"
+            android:src="@drawable/reward"
             android:scaleType="centerInside"/>
 
     </LinearLayout>

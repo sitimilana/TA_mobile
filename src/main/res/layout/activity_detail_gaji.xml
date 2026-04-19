@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dashboard">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivProfile"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/profile"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/CircleImageView"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile"
+            app:layout_constraintEnd_toStartOf="@+id/ivLogoHeader"
+            app:layout_constraintStart_toEndOf="@id/ivProfile"
+            app:layout_constraintTop_toTopOf="@id/ivProfile">
+
+            <TextView
+                android:id="@+id/tvWelcomeName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selamat Datang, Ahmad"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvRole"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Staff Keuangan"
+                android:textColor="@color/role_text"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivLogoHeader"
+            android:layout_width="60dp"
+            android:layout_height="35dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/logoshe"
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ivProfile" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tvSalaryDetailTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Detail Slip Gaji"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardSalaryDetail"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#EAEAEA"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintTop_toBottomOf="@id/tvSalaryDetailTitle">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Komponen Gaji"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Gaji Pokok" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 3.500.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Uang Makan" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 300.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Leader" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 150.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Kinerja" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 100.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Program" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 100.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="BPJS" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 80.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Bonus" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 120.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Lain-Lain" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 50.000" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginVertical="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Potongan"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Potongan Absen" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 50.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem">
+                    <TextView style="@style/SalaryLabel" android:text="Cash Bon" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 100.000" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/SalaryDetailItem" android:layout_marginTop="8dp">
+                    <TextView style="@style/SalaryLabel" android:text="Total Potongan" android:textColor="@color/black" />
+                    <TextView style="@style/SalaryValue" android:text="Rp 150.000" android:textColor="@color/black" android:textStyle="bold" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginVertical="16dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gaji Bersih : "
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tvNetSalaryDetail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rp 4.200.000"
+                        android:layout_marginStart="8dp"
+                        android:textColor="@color/avatar_blue"
+                        android:textSize="28sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="@color/white"
+        android:elevation="16dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/home" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/p_cuti" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/slip_gaji" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/penilaian_" app:tint="#888888"/>
+        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/reward" app:tint="#888888"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
