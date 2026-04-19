@@ -53,9 +53,9 @@ class PresensiActivity : AppCompatActivity() {
     private var jenisAbsen: String = "masuk"
 
     // KOORDINAT KANTOR (Pastikan ini sesuai lokasi Anda saat ini jika memakai HP asli)
-    private var OFFICE_LAT = -7.7509239
-    private var OFFICE_LON = 111.9946412
-    private var MAX_RADIUS = 100.0 // Saya naikkan ke 100 meter agar lebih toleran saat testing
+    private var officeLat = -7.7509239
+    private var officeLon = 111.9946412
+    private var maxRadius = 100.0 // Saya naikkan ke 100 meter agar lebih toleran saat testing
     private var isOfficeConfigReady = false
 
     private val requestPermissionLauncher =
@@ -126,16 +126,32 @@ class PresensiActivity : AppCompatActivity() {
                     val officeLon = config?.officeLon
                     val maxRadius = config?.maxRadius
 
-                    if (response.isSuccessful && response.body()?.success == true &&
-                        officeLat != null && officeLon != null && maxRadius != null && maxRadius > 0
-                    ) {
-                        OFFICE_LAT = officeLat
-                        OFFICE_LON = officeLon
-                        MAX_RADIUS = maxRadius
+                    if (!response.isSuccessful) {
+                        disableCaptureForConfigFailure("Server konfigurasi mengembalikan error (${response.code()}).")
+                        return
+                    }
+
+                    if (response.body()?.success != true) {
+                        disableCaptureForConfigFailure(response.body()?.message ?: "Konfigurasi lokasi kantor ditolak server.")
+                        return
+                    }
+
+                    if (officeLat == null || officeLon == null || maxRadius == null) {
+                        disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak lengkap.")
+                        return
+                    }
+
+                    if (!isValidOfficeConfig(officeLat, officeLon, maxRadius)) {
+                        disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak valid.")
+                        return
+                    }
+
+                    run {
+                        this@PresensiActivity.officeLat = officeLat
+                        this@PresensiActivity.officeLon = officeLon
+                        this@PresensiActivity.maxRadius = maxRadius
                         isOfficeConfigReady = true
                         setCaptureEnabled(true)
-                    } else {
-                        disableCaptureForConfigFailure(response.body()?.message ?: "Gagal memuat konfigurasi lokasi kantor.")
                     }
                 }
 
@@ -156,19 +172,24 @@ class PresensiActivity : AppCompatActivity() {
         btnCapture.alpha = if (isEnabled) 1f else 0.5f
     }
 
+    private fun isValidOfficeConfig(lat: Double, lon: Double, radius: Double): Boolean {
+        return lat.isFinite() && lon.isFinite() && radius.isFinite() &&
+            lat in -90.0..90.0 && lon in -180.0..180.0 && radius > 0
+    }
+
     private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
         val results = FloatArray(1)
-        Location.distanceBetween(userLat, userLon, OFFICE_LAT, OFFICE_LON, results)
+        Location.distanceBetween(userLat, userLon, officeLat, officeLon, results)
         val distanceInMeters = results[0]
 
         // LOG UNTUK DEBUGGING (Cek di Logcat dengan filter "ABSENSI_DEBUG")
         Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
         Log.d("ABSENSI_DEBUG", "Jarak ke Kantor: $distanceInMeters meter")
 
-        return if (distanceInMeters <= MAX_RADIUS) {
+        return if (distanceInMeters <= maxRadius) {
             true
         } else {
-            Toast.makeText(this, "Gagal! Jarak Anda ${distanceInMeters.toInt()}m dari kantor (Maks ${MAX_RADIUS.toInt()}m)", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Gagal! Jarak Anda ${distanceInMeters.toInt()}m dari kantor (Maks ${maxRadius.toInt()}m)", Toast.LENGTH_LONG).show()
             false
         }
     }
