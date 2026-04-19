@@ -122,9 +122,9 @@ class PresensiActivity : AppCompatActivity() {
             .enqueue(object : Callback<ConfigResponse> {
                 override fun onResponse(call: Call<ConfigResponse>, response: Response<ConfigResponse>) {
                     val config = response.body()?.data
-                    val officeLat = config?.officeLat
-                    val officeLon = config?.officeLon
-                    val maxRadius = config?.maxRadius
+                    val latFromConfig = config?.officeLat
+                    val lonFromConfig = config?.officeLon
+                    val radiusFromConfig = config?.maxRadius
 
                     if (!response.isSuccessful) {
                         disableCaptureForConfigFailure("Server konfigurasi mengembalikan error (${response.code()}).")
@@ -136,23 +136,21 @@ class PresensiActivity : AppCompatActivity() {
                         return
                     }
 
-                    if (officeLat == null || officeLon == null || maxRadius == null) {
+                    if (latFromConfig == null || lonFromConfig == null || radiusFromConfig == null) {
                         disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak lengkap.")
                         return
                     }
 
-                    if (!isValidOfficeConfig(officeLat, officeLon, maxRadius)) {
+                    if (!isValidOfficeConfig(latFromConfig, lonFromConfig, radiusFromConfig)) {
                         disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak valid.")
                         return
                     }
 
-                    run {
-                        this@PresensiActivity.officeLat = officeLat
-                        this@PresensiActivity.officeLon = officeLon
-                        this@PresensiActivity.maxRadius = maxRadius
-                        isOfficeConfigReady = true
-                        setCaptureEnabled(true)
-                    }
+                    officeLat = latFromConfig
+                    officeLon = lonFromConfig
+                    maxRadius = radiusFromConfig
+                    isOfficeConfigReady = true
+                    setCaptureEnabled(true)
                 }
 
                 override fun onFailure(call: Call<ConfigResponse>, t: Throwable) {
