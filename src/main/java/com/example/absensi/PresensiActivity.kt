@@ -19,6 +19,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.example.absensi.network.ApiConfig
+import com.example.absensi.network.ConfigResponse
 import com.example.absensi.network.LoginResponse
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -52,9 +53,10 @@ class PresensiActivity : AppCompatActivity() {
     private var jenisAbsen: String = "masuk"
 
     // KOORDINAT KANTOR (Pastikan ini sesuai lokasi Anda saat ini jika memakai HP asli)
-    private val OFFICE_LAT = -7.7509239
-    private val OFFICE_LON = 111.9946412
-    private val MAX_RADIUS = 100.0 // Saya naikkan ke 100 meter agar lebih toleran saat testing
+    private var officeLat = -7.7509239
+    private var officeLon = 111.9946412
+    private var maxRadius = 100.0 // Saya naikkan ke 100 meter agar lebih toleran saat testing
+    private var isOfficeConfigReady = false
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -89,6 +91,8 @@ class PresensiActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        setCaptureEnabled(false)
+        fetchOfficeConfig()
 
         if (allPermissionsGranted()) {
             startCamera()
@@ -102,7 +106,9 @@ class PresensiActivity : AppCompatActivity() {
         }
 
         btnCapture.setOnClickListener {
-            if (currentLat == 0.0) {
+            if (!isOfficeConfigReady) {
+                Toast.makeText(this, "Konfigurasi lokasi kantor belum tersedia.", Toast.LENGTH_SHORT).show()
+            } else if (currentLat == 0.0) {
                 Toast.makeText(this, "Mencari lokasi GPS... Tunggu sampai 'Lokasi Terkunci' muncul.", Toast.LENGTH_SHORT).show()
                 getLocation()
             } else if (checkLocationStatus(currentLat, currentLon)) {
@@ -111,19 +117,77 @@ class PresensiActivity : AppCompatActivity() {
         }
     }
 
+    private fun fetchOfficeConfig() {
+        ApiConfig.getApiService().getConfigPresensi()
+            .enqueue(object : Callback<ConfigResponse> {
+                override fun onResponse(call: Call<ConfigResponse>, response: Response<ConfigResponse>) {
+                    val config = response.body()?.data
+                    val latFromConfig = config?.officeLat
+                    val lonFromConfig = config?.officeLon
+                    val radiusFromConfig = config?.maxRadius
+
+                    if (!response.isSuccessful) {
+                        disableCaptureForConfigFailure("Server konfigurasi mengembalikan error (${response.code()}).")
+                        return
+                    }
+
+                    if (response.body()?.success != true) {
+                        disableCaptureForConfigFailure(response.body()?.message ?: "Konfigurasi lokasi kantor ditolak server.")
+                        return
+                    }
+
+                    if (latFromConfig == null || lonFromConfig == null || radiusFromConfig == null) {
+                        disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak lengkap.")
+                        return
+                    }
+
+                    if (!isValidOfficeConfig(latFromConfig, lonFromConfig, radiusFromConfig)) {
+                        disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak valid.")
+                        return
+                    }
+
+                    officeLat = latFromConfig
+                    officeLon = lonFromConfig
+                    maxRadius = radiusFromConfig
+                    isOfficeConfigReady = true
+                    setCaptureEnabled(true)
+                }
+
+                override fun onFailure(call: Call<ConfigResponse>, t: Throwable) {
+                    disableCaptureForConfigFailure("Gagal terhubung ke server konfigurasi.")
+                }
+            })
+    }
+
+    private fun disableCaptureForConfigFailure(message: String) {
+        isOfficeConfigReady = false
+        setCaptureEnabled(false)
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    private fun setCaptureEnabled(isEnabled: Boolean) {
+        btnCapture.isEnabled = isEnabled
+        btnCapture.alpha = if (isEnabled) 1f else 0.5f
+    }
+
+    private fun isValidOfficeConfig(lat: Double, lon: Double, radius: Double): Boolean {
+        return lat.isFinite() && lon.isFinite() && radius.isFinite() &&
+            lat in -90.0..90.0 && lon in -180.0..180.0 && radius > 0
+    }
+
     private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
         val results = FloatArray(1)
-        Location.distanceBetween(userLat, userLon, OFFICE_LAT, OFFICE_LON, results)
+        Location.distanceBetween(userLat, userLon, officeLat, officeLon, results)
         val distanceInMeters = results[0]
 
         // LOG UNTUK DEBUGGING (Cek di Logcat dengan filter "ABSENSI_DEBUG")
         Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
         Log.d("ABSENSI_DEBUG", "Jarak ke Kantor: $distanceInMeters meter")
 
-        return if (distanceInMeters <= MAX_RADIUS) {
+        return if (distanceInMeters <= maxRadius) {
             true
         } else {
-            Toast.makeText(this, "Gagal! Jarak Anda ${distanceInMeters.toInt()}m dari kantor (Maks ${MAX_RADIUS.toInt()}m)", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Gagal! Jarak Anda ${distanceInMeters.toInt()}m dari kantor (Maks ${maxRadius.toInt()}m)", Toast.LENGTH_LONG).show()
             false
         }
     }
