@@ -8,8 +8,10 @@ import retrofit2.http.POST
 // Import untuk fitur Absensi Kamera (Multipart)
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.Part
+import retrofit2.http.Query
 
 interface ApiService {
     @GET("config-presensi")
@@ -31,4 +33,38 @@ interface ApiService {
         @Part("longitude") longitude: RequestBody,
         @Part foto: MultipartBody.Part
     ): Call<LoginResponse>
+
+    @FormUrlEncoded
+    @POST("absensi/riwayat")
+    fun getRiwayatAbsensi(@Field("id_user") idUser: String): Call<RiwayatResponse>
+
+    @Multipart
+    @POST("api/cuti") // Sesuai dengan route Laravel Anda
+    fun submitCuti(
+        @Header("Authorization") token: String,
+        @Part("tanggal_mulai") tglMulai: RequestBody,
+        @Part("tanggal_selesai") tglSelesai: RequestBody,
+        @Part("jenis_cuti") jenisCuti: RequestBody,
+        @Part("alasan") alasan: RequestBody,
+        @Part berkasBukti: MultipartBody.Part? // Bisa null
+    ): Call<LoginResponse> // Kita pakai LoginResponse karena formatnya mirip (punya 'message' dan 'success'/'status')
+
+    @GET("cuti")
+    fun getRiwayatCuti(@Header("Authorization") token: String): Call<CutiResponse>
+
+
+    @GET("penilaian")
+    fun getPenilaian(
+        @Header("Authorization") token: String,
+        @Query("bulan") bulan: Int,
+        @Query("tahun") tahun: Int
+    ): Call<PenilaianResponse>
+
+    @GET("rewards") // Sesuaikan dengan endpoint di Laravel
+    fun getRewards(
+        @Header("Authorization") token: String
+    ): Call<RewardResponse>
+
+    @GET("gaji")
+    fun getSalarySlips(@Header("Authorization") token: String): Call<SalaryResponse>
 }

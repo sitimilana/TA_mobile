@@ -11,6 +11,7 @@ class DashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
+        NavigationUtils.setupBottomNav(this)
 
         // 1. Ambil data yang disimpan saat Login tadi
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
@@ -21,7 +22,8 @@ class DashboardActivity : AppCompatActivity() {
         // Ubah XML Anda sedikit untuk menambahkan ID ini pada TextView-nya.
         val tvWelcomeName: TextView = findViewById(R.id.tvWelcomeName)
         val tvRole: TextView = findViewById(R.id.tvRole)
-
+        val cardStatusHariIni: MaterialCardView = findViewById(R.id.cardStatusHariIni)
+        val btnLihatRiwayat: TextView = findViewById(R.id.btnLihatRiwayat)
         // 3. Pasang nama ke layar
         tvWelcomeName.text = "Selamat Datang, $namaLengkap"
         tvRole.text = "Karyawan" // Karena aplikasi mobile ini khusus karyawan
@@ -39,6 +41,16 @@ class DashboardActivity : AppCompatActivity() {
             val intent = Intent(this, PresensiActivity::class.java)
             intent.putExtra("JENIS_ABSEN", "pulang")
             startActivity(intent)
+        }
+
+        val intentRiwayat = Intent(this, RiwayatAbsensiActivity::class.java)
+
+        cardStatusHariIni.setOnClickListener {
+            startActivity(intentRiwayat)
+        }
+
+        btnLihatRiwayat.setOnClickListener {
+            startActivity(intentRiwayat)
         }
     }
 }

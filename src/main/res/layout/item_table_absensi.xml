@@ -1,73 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@color/white">
+    android:orientation="horizontal"
+    android:paddingVertical="12dp"
+    android:paddingHorizontal="8dp"
+    android:background="@color/white"
+    android:weightSum="10">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tvNo"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingVertical="14dp"
-        android:paddingHorizontal="8dp"
-        android:weightSum="10"
-        android:gravity="center_vertical">
+        android:layout_weight="1.5"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        tools:text="1" />
 
-        <TextView
-            android:id="@+id/tvNo"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.5"
-            android:text="1"
-            android:textColor="@color/black"
-            android:textSize="12sp"
-            android:gravity="center"/>
+    <TextView
+        android:id="@+id/tvTanggal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        tools:text="2026-04-23" />
 
-        <TextView
-            android:id="@+id/tvTanggal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="3"
-            android:text="19 Apr 2026"
-            android:textColor="@color/black"
-            android:textSize="12sp"
-            android:gravity="center"/>
+    <TextView
+        android:id="@+id/tvJamMasuk"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        tools:text="07:30" />
 
-        <TextView
-            android:id="@+id/tvMasuk"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:text="07:45"
-            android:textColor="@color/black"
-            android:textSize="12sp"
-            android:gravity="center"/>
+    <TextView
+        android:id="@+id/tvJamPulang"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        tools:text="17:05" />
 
-        <TextView
-            android:id="@+id/tvPulang"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:text="16:10"
-            android:textColor="@color/black"
-            android:textSize="12sp"
-            android:gravity="center"/>
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.5"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        tools:text="HADIR" />
 
-        <ImageView
-            android:id="@+id/ivStatus"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1.5"
-            android:src="@android:drawable/presence_online"
-            app:tint="#28A745" />
-
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#F0F0F0"/>
 </LinearLayout>

@@ -34,6 +34,18 @@
         <activity
             android:name=".PresensiActivity"
             android:exported="false" />
+        <activity
+        android:name=".PengajuanCutiActivity"
+        android:exported="false" />
+        <activity
+            android:name=".RiwayatCutiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RewardDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RiwayatAbsensiActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

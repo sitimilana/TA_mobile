@@ -52,10 +52,10 @@ class PresensiActivity : AppCompatActivity() {
     private var currentLon: Double = 0.0
     private var jenisAbsen: String = "masuk"
 
-    // KOORDINAT KANTOR (Pastikan ini sesuai lokasi Anda saat ini jika memakai HP asli)
+    // KOORDINAT KANTOR
     private var officeLat = -7.7509239
     private var officeLon = 111.9946412
-    private var maxRadius = 100.0 // Saya naikkan ke 100 meter agar lebih toleran saat testing
+    private var maxRadius = 100.0
     private var isOfficeConfigReady = false
 
     private val requestPermissionLauncher =
@@ -72,6 +72,7 @@ class PresensiActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_presensi)
+        NavigationUtils.setupBottomNav(this)
 
         // 1. Inisialisasi View
         viewFinder = findViewById(R.id.viewFinder)
@@ -80,11 +81,14 @@ class PresensiActivity : AppCompatActivity() {
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
         tvRole = findViewById(R.id.tvRole)
 
-        // 2. Ambil Data User (Sama seperti Dashboard)
+        // 2. Ambil Data User dari SharedPreferences
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
+        val divisi = sharedPref.getString("DIVISI", "Belum ada divisi")
+
+        // Set ke View
         tvWelcomeName.text = "Selamat Datang, $namaLengkap"
-        tvRole.text = "Karyawan"
+        tvRole.text = divisi // Menampilkan Divisi asli dari database!
 
         jenisAbsen = intent.getStringExtra("JENIS_ABSEN") ?: "masuk"
         tvTitlePresensi.text = "Presensi ${jenisAbsen.uppercase()}"
@@ -172,7 +176,7 @@ class PresensiActivity : AppCompatActivity() {
 
     private fun isValidOfficeConfig(lat: Double, lon: Double, radius: Double): Boolean {
         return lat.isFinite() && lon.isFinite() && radius.isFinite() &&
-            lat in -90.0..90.0 && lon in -180.0..180.0 && radius > 0
+                lat in -90.0..90.0 && lon in -180.0..180.0 && radius > 0
     }
 
     private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
@@ -180,7 +184,6 @@ class PresensiActivity : AppCompatActivity() {
         Location.distanceBetween(userLat, userLon, officeLat, officeLon, results)
         val distanceInMeters = results[0]
 
-        // LOG UNTUK DEBUGGING (Cek di Logcat dengan filter "ABSENSI_DEBUG")
         Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
         Log.d("ABSENSI_DEBUG", "Jarak ke Kantor: $distanceInMeters meter")
 
@@ -191,9 +194,6 @@ class PresensiActivity : AppCompatActivity() {
             false
         }
     }
-
-    // Fungsi lainnya (startCamera, getLocation, takePhoto, uploadKeLaravel) tetap sama seperti sebelumnya...
-    // [Gunakan kode fungsi pendukung dari jawaban saya sebelumnya untuk menghemat tempat]
 
     @SuppressLint("MissingPermission")
     private fun getLocation() {
@@ -259,18 +259,33 @@ class PresensiActivity : AppCompatActivity() {
         val requestImageFile = fotoFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
         val fotoMultipart = MultipartBody.Part.createFormData("foto", fotoFile.name, requestImageFile)
 
+        Toast.makeText(this, "Mengirim data absensi...", Toast.LENGTH_SHORT).show()
+
         ApiConfig.getApiService().submitAbsensi(idUser, jenis, lat, lon, fotoMultipart)
             .enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     if (response.isSuccessful && response.body()?.success == true) {
-                        Toast.makeText(this@PresensiActivity, "Absen Berhasil!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@PresensiActivity, response.body()?.message ?: "Absen Berhasil!", Toast.LENGTH_LONG).show()
                         finish()
                     } else {
-                        Toast.makeText(this@PresensiActivity, response.body()?.message ?: "Gagal", Toast.LENGTH_SHORT).show()
+                        // Membaca pesan error dari Laravel jika ditolak (misal belum jam 15:00 untuk pulang)
+                        try {
+                            val errorString = response.errorBody()?.string()
+                            if (errorString != null) {
+                                val jsonObject = org.json.JSONObject(errorString)
+                                val pesanError = jsonObject.getString("message")
+                                Toast.makeText(this@PresensiActivity, pesanError, Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(this@PresensiActivity, "Gagal absen. Terjadi kesalahan server.", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(this@PresensiActivity, "Gagal memproses respon server: ${response.code()}", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
+
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    Toast.makeText(this@PresensiActivity, "Koneksi Error", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PresensiActivity, "Koneksi lambat atau terputus: ${t.message}", Toast.LENGTH_LONG).show()
                 }
             })
     }

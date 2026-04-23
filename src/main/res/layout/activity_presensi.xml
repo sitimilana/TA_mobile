@@ -112,41 +112,36 @@
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
-
-        <!-- HOME -->
         <ImageView
+            android:id="@+id/nav_home"
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
             android:src="@drawable/home"
             android:scaleType="centerInside"/>
-
-        <!-- PENGAJUAN CUTI -->
         <ImageView
+            android:id="@+id/nav_cuti"
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
             android:src="@drawable/p_cuti"
             android:scaleType="centerInside"/>
-
-        <!-- PENILAIAN KINERJA -->
         <ImageView
+            android:id="@+id/nav_gaji"
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
             android:src="@drawable/slip_gaji"
             android:scaleType="centerInside"/>
-
-        <!-- REWARD -->
         <ImageView
+            android:id="@+id/nav_penilaian"
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
             android:src="@drawable/penilaian_"
             android:scaleType="centerInside"/>
-
-        <!-- SLIP GAJI -->
         <ImageView
+            android:id="@+id/nav_reward"
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"

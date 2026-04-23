@@ -116,27 +116,27 @@
 
                 <LinearLayout style="@style/SalaryDetailItem">
                     <TextView style="@style/SalaryLabel" android:text="Nama Reward" />
-                    <TextView style="@style/SalaryValue" android:text="Employee of the Month" />
+                    <TextView android:id="@+id/tvDetailRewardName" style="@style/SalaryValue" android:text="-" />
                 </LinearLayout>
 
                 <LinearLayout style="@style/SalaryDetailItem">
                     <TextView style="@style/SalaryLabel" android:text="Jenis Reward" />
-                    <TextView style="@style/SalaryValue" android:text="Penghargaan Bulanan" />
+                    <TextView android:id="@+id/tvDetailRewardType" style="@style/SalaryValue" android:text="-" />
                 </LinearLayout>
 
                 <LinearLayout style="@style/SalaryDetailItem">
                     <TextView style="@style/SalaryLabel" android:text="Tanggal" />
-                    <TextView style="@style/SalaryValue" android:text="25 April 2026" />
+                    <TextView android:id="@+id/tvDetailRewardDate" style="@style/SalaryValue" android:text="-" />
                 </LinearLayout>
 
                 <LinearLayout style="@style/SalaryDetailItem">
                     <TextView style="@style/SalaryLabel" android:text="Nilai Kinerja" />
-                    <TextView style="@style/SalaryValue" android:text="42" android:textColor="@color/avatar_blue" android:textStyle="bold" />
+                    <TextView android:id="@+id/tvDetailRewardScore" style="@style/SalaryValue" android:text="0" android:textColor="@color/avatar_blue" android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout style="@style/SalaryDetailItem" android:layout_marginTop="8dp">
                     <TextView style="@style/SalaryLabel" android:text="Alasan" android:textColor="@color/black" />
-                    <TextView style="@style/SalaryValue" android:text="Pencapaian target luar biasa dan kedisiplinan tinggi." android:textColor="@color/black" android:gravity="end" />
+                    <TextView android:id="@+id/tvDetailRewardReason" style="@style/SalaryValue" android:text="-" android:textColor="@color/black" android:gravity="end" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -153,11 +153,11 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/home" app:tint="#888888"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/p_cuti" app:tint="#888888"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/slip_gaji" app:tint="#888888"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/penilaian_" app:tint="@color/avatar_blue"/>
-        <ImageView android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/reward" app:tint="#888888"/>
+        <ImageView android:id="@+id/nav_home" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/home" app:tint="#888888"/>
+        <ImageView android:id="@+id/nav_cuti" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/p_cuti" app:tint="#888888"/>
+        <ImageView android:id="@+id/nav_gaji" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/slip_gaji" app:tint="#888888"/>
+        <ImageView android:id="@+id/nav_penilaian" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/penilaian_" app:tint="#888888"/>
+        <ImageView android:id="@+id/nav_reward" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/reward" app:tint="@color/avatar_blue"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

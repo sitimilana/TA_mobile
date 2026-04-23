@@ -20,7 +20,7 @@
             android:id="@+id/ivSmallTrophy"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/small_trophy_outline"
+            android:src="@drawable/trophy"
             app:tint="@color/avatar_blue"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

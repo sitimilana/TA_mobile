@@ -1,4 +1,6 @@
 package com.example.absensi
+
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -6,7 +8,9 @@ import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.LoginResponse
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
-import android.content.Intent
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class LoginActivity : AppCompatActivity() {
 
@@ -33,51 +37,54 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Username dan Password wajib diisi!", Toast.LENGTH_SHORT).show()
             } else {
                 // Tembak API Login Laravel menggunakan Retrofit
-                ApiConfig.getApiService().login(username, password).enqueue(object : retrofit2.Callback<LoginResponse> {
+                ApiConfig.getApiService().login(username, password).enqueue(object : Callback<LoginResponse> {
 
-                    // Jika berhasil terhubung ke server (Walaupun password salah, tetap masuk sini selama server hidup)
-                    override fun onResponse(call: retrofit2.Call<LoginResponse>, response: retrofit2.Response<LoginResponse>) {
-                        // Ambil body response satu kali saja untuk efisiensi
+                    // Jika berhasil terhubung ke server
+                    override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                         val body = response.body()
 
+                        // Jika login sukses (Password benar & Akun aktif)
                         if (response.isSuccessful && body?.success == true) {
-                            // Definisikan 'data' agar bisa digunakan di bawahnya
-                            val data = body.data
-
-                            // Sekarang variabel 'data' sudah dikenali
-                            val idUser = data?.user?.idUser.toString()
-                            val token = data?.token
-                            val namaLengkap = data?.user?.namaLengkap
-                            val username = data?.user?.username
-
-                            // 1. Simpan ke SharedPreferences
                             val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
                             val editor = sharedPref.edit()
 
-                            editor.putString("ID_USER", idUser)
-                            editor.putString("TOKEN", token)
-                            editor.putString("NAMA_LENGKAP", namaLengkap)
-                            editor.putString("USERNAME", username)
-                            editor.apply()
+                            editor.putString("TOKEN", body.token ?: "")
 
-                            Toast.makeText(this@LoginActivity, "Selamat Datang, $namaLengkap!", Toast.LENGTH_SHORT).show()
+                            // Simpan Data User
+                            val userData = body.data
+                            editor.putString("ID_USER", userData?.idUser?.toString() ?: "")
+                            editor.putString("USERNAME", userData?.username ?: "")
+                            editor.putString("NAMA_LENGKAP", userData?.namaLengkap ?: "")
 
+                            // Cek apakah divisi kosong/null dari Laravel. Jika iya, beri teks sementara
+                            val divisi = userData?.divisi
+                            if (divisi.isNullOrEmpty()) {
+                                editor.putString("DIVISI", "Divisi belum diatur")
+                            } else {
+                                editor.putString("DIVISI", divisi)
+                            }
+
+                            editor.apply() // Wajib agar tersimpan!
+
+                            Toast.makeText(this@LoginActivity, body.message, Toast.LENGTH_SHORT).show()
+
+                            // Pindah ke Dashboard
                             val intent = Intent(this@LoginActivity, DashboardActivity::class.java)
                             startActivity(intent)
                             finish()
 
                         } else {
+                            // Jika Gagal (Password salah, Akun mati, atau Server Error)
                             try {
-                                // Jangan baca seluruh string jika body-nya terlalu besar
                                 val errorBody = response.errorBody()
                                 val errorString = errorBody?.string() ?: "Gagal"
 
-                                // JIKA ISINYA HTML (Ciri-ciri error 500 Laravel)
+                                // Mempertahankan logika cerdas Anda: JIKA ISINYA HTML (Ciri-ciri error 500 Laravel)
                                 if (errorString.contains("<!DOCTYPE html>") || errorString.contains("<html>")) {
                                     Toast.makeText(this@LoginActivity, "Server sedang Error (500). Cek Laravel Log!", Toast.LENGTH_LONG).show()
                                 } else {
-                                    // Jika isinya JSON pendek biasa
-                                    Toast.makeText(this@LoginActivity, "Login Gagal: Cek Username/Password", Toast.LENGTH_LONG).show()
+                                    // Menampilkan pesan error dari JSON Laravel (misal: "Login Gagal: Username atau Password salah!")
+                                    Toast.makeText(this@LoginActivity, body?.message ?: "Login Gagal", Toast.LENGTH_LONG).show()
                                 }
                             } catch (e: Exception) {
                                 Toast.makeText(this@LoginActivity, "Terjadi kesalahan sistem", Toast.LENGTH_SHORT).show()
@@ -85,8 +92,8 @@ class LoginActivity : AppCompatActivity() {
                         }
                     }
 
-                    // Jika gagal terhubung ke server sama sekali (XAMPP mati, jaringan putus, salah IP)
-                    override fun onFailure(call: retrofit2.Call<LoginResponse>, t: Throwable) {
+                    // Jika gagal terhubung ke server sama sekali (XAMPP mati, jaringan putus, dll)
+                    override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                         Toast.makeText(this@LoginActivity, "Koneksi Error: " + t.message, Toast.LENGTH_LONG).show()
                     }
                 })
