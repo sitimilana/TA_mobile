@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -23,7 +24,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
-class PengajuanCutiActivity : AppCompatActivity() {
+class PengajuanActivity : AppCompatActivity() {
 
     private lateinit var etNama: TextInputEditText
     private lateinit var etDivisi: TextInputEditText
@@ -33,6 +34,11 @@ class PengajuanCutiActivity : AppCompatActivity() {
     private lateinit var etAlasanCuti: TextInputEditText
     private lateinit var btnChooseFile: MaterialButton
     private lateinit var btnAjukan: MaterialButton
+
+    // View Tambahan untuk Upload
+    private lateinit var layoutUpload: LinearLayout
+    private lateinit var tvUploadHint: TextView
+    private lateinit var tvFileName: TextView
 
     // Header Views
     private lateinit var tvWelcomeName: TextView
@@ -44,17 +50,19 @@ class PengajuanCutiActivity : AppCompatActivity() {
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            btnChooseFile.text = "File Terpilih"
+            btnChooseFile.text = "Ubah File"
+            tvFileName.text = "File berhasil dilampirkan"
+            tvFileName.setTextColor(resources.getColor(R.color.avatar_blue, null))
             imageFile = uriToFile(uri)
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_pengajuan_cuti)
+        setContentView(R.layout.activity_pengajuan)
         NavigationUtils.setupBottomNav(this)
 
-        // --- 1. Inisialisasi View Header & Form ---
+        // --- 1. Inisialisasi View ---
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
         tvRole = findViewById(R.id.tvRole)
 
@@ -67,39 +75,68 @@ class PengajuanCutiActivity : AppCompatActivity() {
         btnChooseFile = findViewById(R.id.btnChooseFile)
         btnAjukan = findViewById(R.id.btnAjukan)
 
-        // --- 2. Ambil Data User dari SharedPreferences (Untuk Header & Isi Form) ---
+        layoutUpload = findViewById(R.id.layoutUpload)
+        tvUploadHint = findViewById(R.id.tvUploadHint)
+        tvFileName = findViewById(R.id.tvFileName)
+
+        // --- 2. Ambil Data User dari SharedPreferences ---
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
         val divisi = sharedPref.getString("DIVISI", "Belum ada divisi")
 
-        // Set ke Header Profil
         tvWelcomeName.text = "Selamat Datang, $namaLengkap"
         tvRole.text = divisi
 
-        // Set ke Form Input (Disabled agar tidak diubah manual)
         etNama.setText(namaLengkap)
-        etNama.isEnabled = false
         etDivisi.setText(divisi)
-        etDivisi.isEnabled = false
 
-        // --- 3. Setup Spinner ---
-        val listKeterangan = arrayOf("Cuti Tahunan", "Izin", "Sakit", "Cuti Melahirkan", "Cuti Penting")
+        // --- 3. Setup Spinner (Disederhanakan menjadi 3 Kategori) ---
+        val listKeterangan = arrayOf("Cuti", "Izin", "Sakit")
         val adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listKeterangan)
         spinnerKeterangan.adapter = adapterSpinner
 
-        // --- 4. Setup Kalender (Logika H-1) ---
+        spinnerKeterangan.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val jenisPengajuan = listKeterangan[position].lowercase()
+
+                when {
+                    jenisPengajuan == "sakit" -> {
+                        layoutUpload.visibility = View.VISIBLE
+                        tvUploadHint.text = "(Wajib dilampirkan surat dokter/keterangan)"
+                        tvUploadHint.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                    }
+                    jenisPengajuan == "izin" -> {
+                        layoutUpload.visibility = View.VISIBLE
+                        tvUploadHint.text = "(Opsional)"
+                        tvUploadHint.setTextColor(resources.getColor(R.color.role_text, null))
+                    }
+                    jenisPengajuan == "cuti" -> {
+                        // Untuk Cuti, sembunyikan kotak upload
+                        layoutUpload.visibility = View.GONE
+
+                        // Bersihkan file jika ada
+                        imageFile = null
+                        selectedImageUri = null
+                        btnChooseFile.text = "Pilih File"
+                        tvFileName.text = "Belum ada file yang dipilih"
+                        tvFileName.setTextColor(resources.getColor(R.color.role_text, null))
+                    }
+                }
+
+                // Reset tanggal agar user memilih ulang sesuai aturan validasi kalender
+                etTanggalMulai.setText("")
+                etTanggalSelesai.setText("")
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // --- 4. Setup Kalender ---
         etTanggalMulai.setOnClickListener { showDatePicker(true) { date -> etTanggalMulai.setText(date) } }
         etTanggalSelesai.setOnClickListener { showDatePicker(false) { date -> etTanggalSelesai.setText(date) } }
 
-        // --- 5. Setup Tombol Upload Bukti ---
-        btnChooseFile.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
-
-        // --- 6. Setup Tombol Ajukan ---
-        btnAjukan.setOnClickListener {
-            kirimDataCuti()
-        }
+        // --- 5. Setup Tombol ---
+        btnChooseFile.setOnClickListener { pickImageLauncher.launch("image/*") }
+        btnAjukan.setOnClickListener { kirimDataCuti() }
     }
 
     private fun showDatePicker(isTanggalMulai: Boolean, onDateSelected: (String) -> Unit) {
@@ -113,19 +150,21 @@ class PengajuanCutiActivity : AppCompatActivity() {
             onDateSelected(formattedDate)
         }, year, month, day)
 
-        val jenisCuti = spinnerKeterangan.selectedItem.toString()
+        val jenisPengajuan = spinnerKeterangan.selectedItem.toString().lowercase()
         val waktuSekarangMs = System.currentTimeMillis() - 1000
 
         if (isTanggalMulai) {
-            if (jenisCuti.equals("Sakit", ignoreCase = true)) {
-                // Sakit boleh pilih hari ini
+            // Izin dan Sakit boleh hari ini
+            if (jenisPengajuan == "sakit" || jenisPengajuan == "izin") {
                 datePickerDialog.datePicker.minDate = waktuSekarangMs
             } else {
-                // Selain sakit, minimal pilih besok (+ 24 Jam)
-                datePickerDialog.datePicker.minDate = waktuSekarangMs + (1000 * 60 * 60 * 24)
+                // Cuti wajib minimal H-1 (besok)
+                val besok = Calendar.getInstance()
+                besok.add(Calendar.DAY_OF_MONTH, 1)
+                datePickerDialog.datePicker.minDate = besok.timeInMillis
             }
         } else {
-            // Untuk tanggal selesai, minimal adalah hari ini
+            // Tanggal selesai minimal hari ini
             datePickerDialog.datePicker.minDate = waktuSekarangMs
         }
 
@@ -135,7 +174,7 @@ class PengajuanCutiActivity : AppCompatActivity() {
     private fun uriToFile(uri: Uri): File? {
         try {
             val inputStream = contentResolver.openInputStream(uri)
-            val tempFile = File.createTempFile("bukti_cuti", ".jpg", cacheDir)
+            val tempFile = File.createTempFile("bukti_pengajuan", ".jpg", cacheDir)
             val outputStream = FileOutputStream(tempFile)
             inputStream?.copyTo(outputStream)
             return tempFile
@@ -149,7 +188,7 @@ class PengajuanCutiActivity : AppCompatActivity() {
         val tglMulai = etTanggalMulai.text.toString()
         val tglSelesai = etTanggalSelesai.text.toString()
         val alasan = etAlasanCuti.text.toString().trim()
-        val jenisCuti = spinnerKeterangan.selectedItem.toString()
+        val jenisPengajuan = spinnerKeterangan.selectedItem.toString()
 
         if (tglMulai.isEmpty() || tglSelesai.isEmpty()) {
             Toast.makeText(this, "Tanggal Mulai & Selesai wajib diisi!", Toast.LENGTH_SHORT).show()
@@ -160,13 +199,19 @@ class PengajuanCutiActivity : AppCompatActivity() {
             return
         }
 
+        // Validasi Frontend: Mencegah tombol submit jika Sakit tapi file kosong
+        if (jenisPengajuan.equals("Sakit", ignoreCase = true) && imageFile == null) {
+            Toast.makeText(this, "Surat keterangan dokter/sakit WAJIB dilampirkan!", Toast.LENGTH_LONG).show()
+            return
+        }
+
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val token = sharedPref.getString("TOKEN", "") ?: ""
         val bearerToken = "Bearer $token"
 
         val reqTglMulai = tglMulai.toRequestBody("text/plain".toMediaTypeOrNull())
         val reqTglSelesai = tglSelesai.toRequestBody("text/plain".toMediaTypeOrNull())
-        val reqJenisCuti = jenisCuti.toRequestBody("text/plain".toMediaTypeOrNull())
+        val reqJenisCuti = jenisPengajuan.toRequestBody("text/plain".toMediaTypeOrNull())
         val reqAlasan = alasan.toRequestBody("text/plain".toMediaTypeOrNull())
 
         var fotoMultipart: MultipartBody.Part? = null
@@ -185,8 +230,8 @@ class PengajuanCutiActivity : AppCompatActivity() {
                     btnAjukan.text = "Ajukan Sekarang"
 
                     if (response.isSuccessful && response.code() == 201) {
-                        Toast.makeText(this@PengajuanCutiActivity, "Pengajuan cuti berhasil dikirim!", Toast.LENGTH_LONG).show()
-                        startActivity(Intent(this@PengajuanCutiActivity, RiwayatCutiActivity::class.java))
+                        Toast.makeText(this@PengajuanActivity, "Pengajuan berhasil dikirim!", Toast.LENGTH_LONG).show()
+                        startActivity(Intent(this@PengajuanActivity, RiwayatPengajuanActivity::class.java))
                         finish()
                     } else {
                         try {
@@ -194,12 +239,12 @@ class PengajuanCutiActivity : AppCompatActivity() {
                             if (errorString != null) {
                                 val jsonObject = JSONObject(errorString)
                                 val pesanError = jsonObject.getString("message")
-                                Toast.makeText(this@PengajuanCutiActivity, pesanError, Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@PengajuanActivity, pesanError, Toast.LENGTH_LONG).show()
                             } else {
-                                Toast.makeText(this@PengajuanCutiActivity, "Gagal. Terjadi kesalahan server.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@PengajuanActivity, "Gagal. Terjadi kesalahan server.", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
-                            Toast.makeText(this@PengajuanCutiActivity, "Gagal memproses respons: ${response.code()}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@PengajuanActivity, "Gagal memproses respons: ${response.code()}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -207,7 +252,7 @@ class PengajuanCutiActivity : AppCompatActivity() {
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                     btnAjukan.isEnabled = true
                     btnAjukan.text = "Ajukan Sekarang"
-                    Toast.makeText(this@PengajuanCutiActivity, "Koneksi Error: ${t.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@PengajuanActivity, "Koneksi Error: ${t.message}", Toast.LENGTH_LONG).show()
                 }
             })
     }

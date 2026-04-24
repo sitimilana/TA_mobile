@@ -35,10 +35,10 @@
             android:name=".PresensiActivity"
             android:exported="false" />
         <activity
-        android:name=".PengajuanCutiActivity"
+        android:name=".PengajuanActivity"
         android:exported="false" />
         <activity
-            android:name=".RiwayatCutiActivity"
+            android:name=".RiwayatPengajuanActivity"
             android:exported="false" />
         <activity
             android:name=".RewardDetailActivity"

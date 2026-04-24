@@ -39,15 +39,15 @@ interface ApiService {
     fun getRiwayatAbsensi(@Field("id_user") idUser: String): Call<RiwayatResponse>
 
     @Multipart
-    @POST("api/cuti") // Sesuai dengan route Laravel Anda
+    @POST("cuti") // <--- Cukup "cuti" saja
     fun submitCuti(
         @Header("Authorization") token: String,
         @Part("tanggal_mulai") tglMulai: RequestBody,
         @Part("tanggal_selesai") tglSelesai: RequestBody,
         @Part("jenis_cuti") jenisCuti: RequestBody,
         @Part("alasan") alasan: RequestBody,
-        @Part berkasBukti: MultipartBody.Part? // Bisa null
-    ): Call<LoginResponse> // Kita pakai LoginResponse karena formatnya mirip (punya 'message' dan 'success'/'status')
+        @Part berkasBukti: MultipartBody.Part?
+    ): Call<LoginResponse>
 
     @GET("cuti")
     fun getRiwayatCuti(@Header("Authorization") token: String): Call<CutiResponse>

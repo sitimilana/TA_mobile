@@ -17,8 +17,8 @@ object NavigationUtils {
 
         // Navigasi ke FORM PENGAJUAN CUTI (Icon Kalender)
         activity.findViewById<View>(R.id.nav_cuti)?.setOnClickListener {
-            if (activity !is PengajuanCutiActivity) {
-                val intent = Intent(activity, PengajuanCutiActivity::class.java)
+            if (activity !is PengajuanActivity) {
+                val intent = Intent(activity, PengajuanActivity::class.java)
                 activity.startActivity(intent)
             }
         }

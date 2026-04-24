@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.absensi.R
 import com.example.absensi.network.CutiItem
 
-class RiwayatCutiAdapter(private val listCuti: List<CutiItem>) : RecyclerView.Adapter<RiwayatCutiAdapter.ViewHolder>() {
+class RiwayatPengajuanAdapter(private val listCuti: List<CutiItem>) : RecyclerView.Adapter<RiwayatPengajuanAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvJenisCuti: TextView = view.findViewById(R.id.tvJenisCuti)
@@ -21,7 +21,7 @@ class RiwayatCutiAdapter(private val listCuti: List<CutiItem>) : RecyclerView.Ad
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_riwayat_cuti, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_riwayat_pengajuan, parent, false)
         return ViewHolder(view)
     }
 
