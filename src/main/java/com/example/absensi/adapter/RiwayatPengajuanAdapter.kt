@@ -32,22 +32,23 @@ class RiwayatPengajuanAdapter(private val listCuti: List<CutiItem>) : RecyclerVi
         holder.tvDurasiCuti.text = "${cuti.tanggalMulai} s/d ${cuti.tanggalSelesai}"
         holder.tvAlasan.text = "Alasan: ${cuti.alasan}"
 
-        // Atur warna status
-        when (cuti.status) {
-            "disetujui_hrd" -> {
+        // Atur warna status sesuai ENUM dari database (approved, rejected, dll)
+        when (cuti.status?.lowercase()) {
+            "approved" -> {
                 holder.tvStatusBadge.text = "Disetujui"
                 holder.tvStatusBadge.setTextColor(Color.parseColor("#155724")) // Hijau tua
-                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_approved) // Pastikan drawable ini ada
+                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_approved)
             }
-            "ditolak" -> {
+            "rejected" -> {
                 holder.tvStatusBadge.text = "Ditolak"
                 holder.tvStatusBadge.setTextColor(Color.parseColor("#721C24")) // Merah tua
-                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_rejected) // Pastikan drawable ini ada
+                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_rejected)
             }
-            else -> { // Pending
+            else -> {
+                // Untuk 'pending_kabag' dan 'pending_pimpinan'
                 holder.tvStatusBadge.text = "Menunggu"
                 holder.tvStatusBadge.setTextColor(Color.parseColor("#856404")) // Kuning tua
-                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_pending) // Pastikan drawable ini ada
+                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_pending)
             }
         }
     }

@@ -281,6 +281,16 @@
                         app:cornerRadius="16dp"
                         app:elevation="4dp"/>
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRiwayat"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Lihat Riwayat Pengajuan"
+                        android:textAllCaps="false"
+                        android:textColor="@color/avatar_blue" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>

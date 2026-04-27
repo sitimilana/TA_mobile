@@ -35,6 +35,8 @@ class PengajuanActivity : AppCompatActivity() {
     private lateinit var btnChooseFile: MaterialButton
     private lateinit var btnAjukan: MaterialButton
 
+    private lateinit var btnRiwayat: MaterialButton
+
     // View Tambahan untuk Upload
     private lateinit var layoutUpload: LinearLayout
     private lateinit var tvUploadHint: TextView
@@ -74,6 +76,7 @@ class PengajuanActivity : AppCompatActivity() {
         etAlasanCuti = findViewById(R.id.etAlasanCuti)
         btnChooseFile = findViewById(R.id.btnChooseFile)
         btnAjukan = findViewById(R.id.btnAjukan)
+        btnRiwayat = findViewById(R.id.btnRiwayat)
 
         layoutUpload = findViewById(R.id.layoutUpload)
         tvUploadHint = findViewById(R.id.tvUploadHint)
@@ -137,6 +140,10 @@ class PengajuanActivity : AppCompatActivity() {
         // --- 5. Setup Tombol ---
         btnChooseFile.setOnClickListener { pickImageLauncher.launch("image/*") }
         btnAjukan.setOnClickListener { kirimDataCuti() }
+        btnRiwayat.setOnClickListener {
+            val intent = Intent(this, RiwayatPengajuanActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun showDatePicker(isTanggalMulai: Boolean, onDateSelected: (String) -> Unit) {
