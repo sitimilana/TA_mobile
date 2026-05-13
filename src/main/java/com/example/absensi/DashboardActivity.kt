@@ -1,32 +1,44 @@
 package com.example.absensi
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.card.MaterialCardView
 
+import com.example.absensi.network.ApiConfig
+import com.example.absensi.network.RiwayatResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.*
+
 class DashboardActivity : AppCompatActivity() {
+
+    private lateinit var tvJamMasukDash: TextView
+    private lateinit var tvJamPulangDash: TextView
+    private lateinit var tvStatusDash: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
         NavigationUtils.setupBottomNav(this)
+        NavigationUtils.setupHeaderWithUserData(this)
 
-        // 1. Ambil data yang disimpan saat Login tadi
-        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-        val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
-
-        // 2. Cari TextView di XML
-        // PERHATIAN: Pastikan TextView "Selamat Datang" di XML Anda memiliki id="@+id/tvWelcomeName"
-        // Ubah XML Anda sedikit untuk menambahkan ID ini pada TextView-nya.
-        val tvWelcomeName: TextView = findViewById(R.id.tvWelcomeName)
-        val tvRole: TextView = findViewById(R.id.tvRole)
+        // ...existing code...
         val cardStatusHariIni: MaterialCardView = findViewById(R.id.cardStatusHariIni)
-        val btnLihatRiwayat: TextView = findViewById(R.id.btnLihatRiwayat)
-        // 3. Pasang nama ke layar
-        tvWelcomeName.text = "Selamat Datang, $namaLengkap"
-        tvRole.text = "Karyawan" // Karena aplikasi mobile ini khusus karyawan
+
+        // Diubah menjadi Button
+        val btnLihatRiwayat: Button = findViewById(R.id.btnLihatRiwayat)
+
+        tvJamMasukDash = findViewById(R.id.tvJamMasukDash)
+        tvJamPulangDash = findViewById(R.id.tvJamPulangDash)
+        tvStatusDash = findViewById(R.id.tvStatusDash)
+
 
         val btnMasuk: MaterialCardView = findViewById(R.id.btnMasuk)
         val btnPulang: MaterialCardView = findViewById(R.id.btnPulang)
@@ -52,5 +64,72 @@ class DashboardActivity : AppCompatActivity() {
         btnLihatRiwayat.setOnClickListener {
             startActivity(intentRiwayat)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        fetchPresensiHariIni()
+    }
+
+    private fun fetchPresensiHariIni() {
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val idUser = sharedPref.getString("ID_USER", "")
+
+        if (idUser.isNullOrEmpty()) return
+
+        ApiConfig.getApiService().getRiwayatAbsensi(idUser).enqueue(object : Callback<RiwayatResponse> {
+            override fun onResponse(call: Call<RiwayatResponse>, response: Response<RiwayatResponse>) {
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val riwayatList = response.body()?.data
+
+                    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val today = sdf.format(Date())
+
+                    val presensiHariIni = riwayatList?.find { it.tanggal == today }
+
+                    if (presensiHariIni != null) {
+                        tvJamMasukDash.text = presensiHariIni.jamMasuk ?: "--:--"
+                        tvJamPulangDash.text = presensiHariIni.jamPulang ?: "--:--"
+
+                        val status = presensiHariIni.status
+                        tvStatusDash.text = status.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                        }
+
+                        // Penambahan Logika Warna
+                        when (status.lowercase(Locale.getDefault())) {
+                            "hadir" -> {
+                                tvStatusDash.setBackgroundColor(Color.parseColor("#E8F5E9")) // Background Hijau Muda
+                                tvStatusDash.setTextColor(Color.parseColor("#2E7D32")) // Text Hijau Tua
+                            }
+                            "terlambat" -> {
+                                tvStatusDash.setBackgroundColor(Color.parseColor("#FFF3E0"))
+                                tvStatusDash.setTextColor(Color.parseColor("#EF6C00"))
+                            }
+                            "alfa" -> {
+                                tvStatusDash.setBackgroundColor(Color.parseColor("#FFEBEE"))
+                                tvStatusDash.setTextColor(Color.parseColor("#C62828"))
+                            }
+                            else -> { // Untuk Cuti, Sakit, atau status lainnya
+                                tvStatusDash.setBackgroundColor(Color.parseColor("#E3F2FD"))
+                                tvStatusDash.setTextColor(Color.parseColor("#1565C0"))
+                            }
+                        }
+                    } else {
+                        tvJamMasukDash.text = "--:--"
+                        tvJamPulangDash.text = "--:--"
+                        tvStatusDash.text = "Belum Absen"
+
+                        // Warna default Abu-abu untuk Belum Absen
+                        tvStatusDash.setBackgroundColor(Color.parseColor("#F5F5F5"))
+                        tvStatusDash.setTextColor(Color.parseColor("#888888"))
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<RiwayatResponse>, t: Throwable) {
+                Toast.makeText(this@DashboardActivity, "Gagal memuat status hari ini", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 }

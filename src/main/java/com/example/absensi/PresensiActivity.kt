@@ -3,10 +3,15 @@ package com.example.absensi
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +53,15 @@ class PresensiActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    private lateinit var ivPreview: ImageView
+    private lateinit var layoutConfirm: LinearLayout
+    private lateinit var btnRetake: Button
+    private lateinit var btnSubmit: Button
+    private lateinit var pbLoading: ProgressBar
+    private lateinit var tvLocationStatus: TextView
+    private lateinit var captureOverlay: View
+    private var capturedPhotoFile: File? = null
+
     private var currentLat: Double = 0.0
     private var currentLon: Double = 0.0
     private var jenisAbsen: String = "masuk"
@@ -73,6 +87,7 @@ class PresensiActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_presensi)
         NavigationUtils.setupBottomNav(this)
+        NavigationUtils.setupHeaderWithUserData(this)
 
         // 1. Inisialisasi View
         viewFinder = findViewById(R.id.viewFinder)
@@ -81,14 +96,26 @@ class PresensiActivity : AppCompatActivity() {
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
         tvRole = findViewById(R.id.tvRole)
 
+        ivPreview = findViewById(R.id.ivPreview)
+        layoutConfirm = findViewById(R.id.layoutConfirm)
+        btnRetake = findViewById(R.id.btnRetake)
+        btnSubmit = findViewById(R.id.btnSubmit)
+        pbLoading = findViewById(R.id.pbLoading)
+        tvLocationStatus = findViewById(R.id.tvLocationStatus)
+        captureOverlay = findViewById(R.id.captureOverlay)
+
+        btnRetake.setOnClickListener { hidePreview() }
+        btnSubmit.setOnClickListener {
+            capturedPhotoFile?.let {
+                btnSubmit.isEnabled = false
+                btnRetake.isEnabled = false
+                pbLoading.visibility = View.VISIBLE
+                uploadKeLaravel(it)
+            }
+        }
+
         // 2. Ambil Data User dari SharedPreferences
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-        val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
-        val divisi = sharedPref.getString("DIVISI", "Belum ada divisi")
-
-        // Set ke View
-        tvWelcomeName.text = "Selamat Datang, $namaLengkap"
-        tvRole.text = divisi // Menampilkan Divisi asli dari database!
 
         jenisAbsen = intent.getStringExtra("JENIS_ABSEN") ?: "masuk"
         tvTitlePresensi.text = "Presensi ${jenisAbsen.uppercase()}"
@@ -181,16 +208,31 @@ class PresensiActivity : AppCompatActivity() {
 
     private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
         val results = FloatArray(1)
+        // Fungsi bawaan Android ini SELALU mengembalikan nilai dalam satuan METER
         Location.distanceBetween(userLat, userLon, officeLat, officeLon, results)
         val distanceInMeters = results[0]
 
-        Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
-        Log.d("ABSENSI_DEBUG", "Jarak ke Kantor: $distanceInMeters meter")
+        // 1. KONVERSI METER KE KILOMETER
+        val distanceInKm = distanceInMeters / 1000.0
 
-        return if (distanceInMeters <= maxRadius) {
+        Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
+        Log.d("ABSENSI_DEBUG", "Jarak ke Kantor (Meter): $distanceInMeters")
+        Log.d("ABSENSI_DEBUG", "Jarak ke Kantor (KM): $distanceInKm")
+
+        // 2. Bandingkan dengan maxRadius yang sekarang bersatuan KM
+        return if (distanceInKm <= maxRadius) {
             true
         } else {
-            Toast.makeText(this, "Gagal! Jarak Anda ${distanceInMeters.toInt()}m dari kantor (Maks ${maxRadius.toInt()}m)", Toast.LENGTH_LONG).show()
+            // 3. Perbaiki Toast agar menampilkan angka desimal yang benar, bukan pakai .toInt()
+            // Menggunakan String.format untuk membatasi 3 angka di belakang koma
+            val jarakFormat = String.format("%.3f", distanceInKm)
+
+            Toast.makeText(
+                this,
+                "Gagal! Jarak Anda ${jarakFormat}km dari kantor (Maks ${maxRadius}km)",
+                Toast.LENGTH_LONG
+            ).show()
+
             false
         }
     }
@@ -201,7 +243,11 @@ class PresensiActivity : AppCompatActivity() {
             if (location != null) {
                 currentLat = location.latitude
                 currentLon = location.longitude
-                Toast.makeText(this, "Lokasi Terkunci!", Toast.LENGTH_SHORT).show()
+                tvLocationStatus.text = "Lokasi Terkunci: ${String.format("%.4f", currentLat)}, ${String.format("%.4f", currentLon)}"
+                tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+            } else {
+                tvLocationStatus.text = "Gagal mengunci lokasi"
+                tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
             }
         }
     }
@@ -226,6 +272,10 @@ class PresensiActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
+
+        // Prevent double clicking
+        btnCapture.isEnabled = false
+
         val photoFile = File(cacheDir, SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis()) + ".jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
@@ -235,12 +285,33 @@ class PresensiActivity : AppCompatActivity() {
 
         imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(this), object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                uploadKeLaravel(photoFile)
+                capturedPhotoFile = photoFile
+                val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+                ivPreview.setImageBitmap(bitmap)
+                showPreview()
+                btnCapture.isEnabled = true
             }
             override fun onError(exc: ImageCaptureException) {
-                Toast.makeText(this@PresensiActivity, "Gagal ambil foto", Toast.LENGTH_SHORT).show()
+                btnCapture.isEnabled = true
+                Toast.makeText(this@PresensiActivity, "Gagal ambil foto: " + exc.message, Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun showPreview() {
+        captureOverlay.visibility = View.GONE
+        ivPreview.visibility = View.VISIBLE
+        layoutConfirm.visibility = View.VISIBLE
+        layoutConfirm.alpha = 0f
+        layoutConfirm.animate().alpha(1f).setDuration(300).start()
+    }
+
+    private fun hidePreview() {
+        ivPreview.visibility = View.GONE
+        layoutConfirm.visibility = View.GONE
+        captureOverlay.visibility = View.VISIBLE
+        capturedPhotoFile?.delete()
+        capturedPhotoFile = null
     }
 
     private fun uploadKeLaravel(fotoFile: File) {
@@ -264,6 +335,10 @@ class PresensiActivity : AppCompatActivity() {
         ApiConfig.getApiService().submitAbsensi(idUser, jenis, lat, lon, fotoMultipart)
             .enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                    pbLoading.visibility = View.GONE
+                    btnSubmit.isEnabled = true
+                    btnRetake.isEnabled = true
+
                     if (response.isSuccessful && response.body()?.success == true) {
                         Toast.makeText(this@PresensiActivity, response.body()?.message ?: "Absen Berhasil!", Toast.LENGTH_LONG).show()
                         finish()
@@ -285,6 +360,9 @@ class PresensiActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                    pbLoading.visibility = View.GONE
+                    btnSubmit.isEnabled = true
+                    btnRetake.isEnabled = true
                     Toast.makeText(this@PresensiActivity, "Koneksi lambat atau terputus: ${t.message}", Toast.LENGTH_LONG).show()
                 }
             })

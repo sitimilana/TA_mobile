@@ -64,6 +64,5 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.4.0")
     implementation("androidx.camera:camera-lifecycle:1.4.0")
     implementation("androidx.camera:camera-view:1.4.0")
-    // Google Play Services (Untuk GPS Lokasi)
-     // Jika TOML: play-services-maps
+    implementation("com.airbnb.android:lottie:6.4.0")
 }

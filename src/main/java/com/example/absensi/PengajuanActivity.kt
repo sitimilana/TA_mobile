@@ -63,11 +63,13 @@ class PengajuanActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pengajuan)
         NavigationUtils.setupBottomNav(this)
+        NavigationUtils.setupHeaderWithUserData(this)
 
         // --- 1. Inisialisasi View ---
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
         tvRole = findViewById(R.id.tvRole)
 
+        // ...existing code...
         etNama = findViewById(R.id.etNama)
         etDivisi = findViewById(R.id.etDivisi)
         etTanggalMulai = findViewById(R.id.etTanggalMulai)
@@ -87,8 +89,6 @@ class PengajuanActivity : AppCompatActivity() {
         val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
         val divisi = sharedPref.getString("DIVISI", "Belum ada divisi")
 
-        tvWelcomeName.text = "Selamat Datang, $namaLengkap"
-        tvRole.text = divisi
 
         etNama.setText(namaLengkap)
         etDivisi.setText(divisi)

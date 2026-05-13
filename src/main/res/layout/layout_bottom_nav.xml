@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottomNavCard"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    app:cardElevation="20dp"
+    app:cardCornerRadius="0dp"
+    app:cardBackgroundColor="@color/white"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <FrameLayout
+            android:id="@+id/nav_home_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView
+                android:id="@+id/nav_home"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/home"
+                android:scaleType="centerInside"
+                app:tint="@color/avatar_blue" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_cuti_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView
+                android:id="@+id/nav_cuti"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/p_cuti"
+                android:scaleType="centerInside"
+                app:tint="#888888" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_gaji_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView
+                android:id="@+id/nav_gaji"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/slip_gaji"
+                android:scaleType="centerInside"
+                app:tint="#888888" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_penilaian_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView
+                android:id="@+id/nav_penilaian"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/penilaian_"
+                android:scaleType="centerInside"
+                app:tint="#888888" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_reward_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView
+                android:id="@+id/nav_reward"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/reward"
+                android:scaleType="centerInside"
+                app:tint="#888888" />
+        </FrameLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

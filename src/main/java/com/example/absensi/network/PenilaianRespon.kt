@@ -5,7 +5,8 @@ import com.google.gson.annotations.SerializedName
 data class PenilaianResponse(
     @SerializedName("success") val success: Boolean?,
     @SerializedName("message") val message: String?,
-    @SerializedName("data") val data: PenilaianData?
+    // PERUBAHAN KRUSIAL: data sekarang berupa List/Array
+    @SerializedName("data") val data: List<PenilaianData>?
 )
 
 data class PenilaianData(
@@ -15,5 +16,7 @@ data class PenilaianData(
     @SerializedName("sikap_kerja") val sikapKerja: Int?,
     @SerializedName("loyalitas") val loyalitas: Int?,
     @SerializedName("total_skor") val totalSkor: Int?,
-    @SerializedName("bulan_tahun") val bulanTahun: String?
+    // PERUBAHAN: Menyesuaikan properti bulan dan tahun (Seperti dari DB)
+    @SerializedName("bulan") val bulan: Int?,
+    @SerializedName("tahun") val tahun: Int?
 )

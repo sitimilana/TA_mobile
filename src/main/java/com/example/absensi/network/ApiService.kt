@@ -11,6 +11,7 @@ import okhttp3.RequestBody
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -52,19 +53,23 @@ interface ApiService {
     @GET("cuti")
     fun getRiwayatCuti(@Header("Authorization") token: String): Call<CutiResponse>
 
-
     @GET("penilaian")
     fun getPenilaian(
-        @Header("Authorization") token: String,
-        @Query("bulan") bulan: Int,
-        @Query("tahun") tahun: Int
+        @Header("Authorization") token: String
     ): Call<PenilaianResponse>
 
-    @GET("rewards") // Sesuaikan dengan endpoint di Laravel
+    @GET("rewards")
     fun getRewards(
         @Header("Authorization") token: String
     ): Call<RewardResponse>
 
     @GET("gaji")
-    fun getSalarySlips(@Header("Authorization") token: String): Call<SalaryResponse>
+    fun getSlipGaji(
+        @Header("Authorization") token: String
+    ): Call<SalaryResponse>
+    @GET("gaji/{id}") // Sesuaikan dengan endpoint route api.php di Laravel Anda
+    fun getDetailSlipGaji(
+        @Header("Authorization") token: String,
+        @Path("id") idGaji: Int
+    ): Call<SalaryDetailResponse>
 }

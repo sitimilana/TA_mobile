@@ -24,8 +24,9 @@ class RewardListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reward_list)
 
-        // Inisialisasi Navigasi Bawah
+        // Inisialisasi Navigasi Bawah dan Header
         NavigationUtils.setupBottomNav(this)
+        NavigationUtils.setupHeaderWithUserData(this)
 
         rvReward = findViewById(R.id.rvRewardList)
         rvReward.layoutManager = LinearLayoutManager(this)

@@ -7,60 +7,25 @@
     android:layout_height="match_parent"
     android:background="@color/bg_dashboard">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/header"
+    <include
+        android:id="@+id/header_layout"
+        layout="@layout/layout_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="20dp"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/ivProfile"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:src="@drawable/profile"
-            android:scaleType="centerCrop"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/CircleImageView" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="@id/ivProfile"
-            app:layout_constraintEnd_toStartOf="@+id/ivLogoHeader"
-            app:layout_constraintStart_toEndOf="@id/ivProfile"
-            app:layout_constraintTop_toTopOf="@id/ivProfile">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Riwayat Cuti"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pantau status pengajuanmu"
-                android:textColor="@color/role_text"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <ImageView
-            android:id="@+id/ivLogoHeader"
-            android:layout_width="60dp"
-            android:layout_height="35dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/logoshe"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/ivProfile"
-            app:layout_constraintBottom_toBottomOf="@id/ivProfile" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/tvRiwayatTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Riwayat Cuti &amp; Izin"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_layout" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/inputSearch"
@@ -68,7 +33,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         app:boxBackgroundColor="@color/white"
         app:boxCornerRadiusBottomEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"
@@ -80,7 +45,7 @@
         app:startIconDrawable="@android:drawable/ic_menu_search"
         app:startIconTint="@color/avatar_blue"
         app:hintEnabled="false"
-        app:layout_constraintTop_toBottomOf="@id/header">
+        app:layout_constraintTop_toBottomOf="@id/tvRiwayatTitle">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSearch"
@@ -150,25 +115,15 @@
         android:paddingHorizontal="20dp"
         android:paddingBottom="20dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav_layout"
         app:layout_constraintTop_toBottomOf="@id/layoutFilter"
         tools:listitem="@layout/item_riwayat_pengajuan" />
 
-    <LinearLayout
-        android:id="@+id/bottomNav"
+    <include
+        android:id="@+id/bottom_nav_layout"
+        layout="@layout/layout_bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="@color/white"
-        android:elevation="16dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageView android:id="@+id/nav_home" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/home" app:tint="#888888"/>
-        <ImageView android:id="@+id/nav_cuti" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/p_cuti" app:tint="@color/avatar_blue"/>
-        <ImageView android:id="@+id/nav_gaji" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/slip_gaji" app:tint="#888888"/>
-        <ImageView android:id="@+id/nav_penilaian" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/penilaian_" app:tint="#888888"/>
-        <ImageView android:id="@+id/nav_reward" android:layout_width="0dp" android:layout_height="24dp" android:layout_weight="1" android:src="@drawable/reward" app:tint="#888888"/>
-    </LinearLayout>
+        android:layout_height="72dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

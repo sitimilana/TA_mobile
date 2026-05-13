@@ -10,5 +10,6 @@
     <color name="bg_dashboard">#B5C2E1</color>
     <color name="btn_attendance">#3F4E91</color>
     <color name="role_text">#E53935</color>
+    <color name="bg_splash">#9BAFD9</color>
 </resources>
 

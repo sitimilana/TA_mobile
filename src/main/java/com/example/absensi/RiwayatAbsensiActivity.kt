@@ -12,6 +12,7 @@ import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.RiwayatData
 import com.example.absensi.network.RiwayatResponse
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.button.MaterialButton
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,12 +23,18 @@ class RiwayatAbsensiActivity : AppCompatActivity() {
     private lateinit var adapter: RiwayatAbsensiAdapter
     private var listFull = mutableListOf<RiwayatData>()
 
+    private lateinit var etSearch: TextInputEditText
+    private lateinit var spinnerTgl: Spinner
+    private lateinit var spinnerBulan: Spinner
+    private lateinit var spinnerTahun: Spinner
+    private lateinit var btnFilter: com.google.android.material.button.MaterialButton
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_riwayat_absensi)
 
         // 1. Setup Header & Navigasi
-        setupHeader()
+        NavigationUtils.setupHeaderWithUserData(this)
         NavigationUtils.setupBottomNav(this)
 
         // 2. Inisialisasi RecyclerView
@@ -36,24 +43,41 @@ class RiwayatAbsensiActivity : AppCompatActivity() {
         adapter = RiwayatAbsensiAdapter(listFull)
         rvTable.adapter = adapter
 
-        // 3. Setup Fitur Search
-        val etSearch = findViewById<TextInputEditText>(R.id.etSearch)
+        // 3. Setup Fitur Search & Filter
+        etSearch = findViewById(R.id.etSearch)
+        spinnerTgl = findViewById(R.id.spinnerTgl)
+        spinnerBulan = findViewById(R.id.spinnerBulan)
+        spinnerTahun = findViewById(R.id.spinnerTahun)
+        btnFilter = findViewById(R.id.btnFilter)
+
+        setupSpinners()
+
         etSearch.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) { filterSearch(s.toString()) }
+            override fun afterTextChanged(s: Editable?) { applyFilter() }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
+        btnFilter.setOnClickListener {
+            applyFilter()
+        }
+
         fetchRiwayatAbsensi()
     }
 
-    private fun setupHeader() {
-        val tvWelcomeName = findViewById<TextView>(R.id.tvWelcomeName)
-        val tvRole = findViewById<TextView>(R.id.tvRole)
+    private fun setupSpinners() {
+        val listTgl = mutableListOf("Semua Tgl")
+        for (i in 1..31) listTgl.add(i.toString().padStart(2, '0'))
+        
+        val listBulan = listOf("Semua Bln", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
+        
+        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        val listTahun = mutableListOf("Semua Thn")
+        for (i in currentYear downTo 2020) listTahun.add(i.toString())
 
-        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-        tvWelcomeName.text = "Selamat Datang, ${sharedPref.getString("NAMA_LENGKAP", "Karyawan")}"
-        tvRole.text = sharedPref.getString("DIVISI", "Belum ada divisi")
+        spinnerTgl.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listTgl)
+        spinnerBulan.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listBulan)
+        spinnerTahun.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listTahun)
     }
 
     private fun fetchRiwayatAbsensi() {
@@ -78,9 +102,22 @@ class RiwayatAbsensiActivity : AppCompatActivity() {
             })
     }
 
-    private fun filterSearch(query: String) {
+    private fun applyFilter() {
+        val query = etSearch.text.toString().trim()
+        val tgl = if (spinnerTgl.selectedItemPosition > 0) spinnerTgl.selectedItem.toString() else ""
+        val bulan = if (spinnerBulan.selectedItemPosition > 0) spinnerBulan.selectedItem.toString() else ""
+        val tahun = if (spinnerTahun.selectedItemPosition > 0) spinnerTahun.selectedItem.toString() else ""
+
         val filteredList = listFull.filter {
-            it.tanggal.contains(query, ignoreCase = true) || it.status.contains(query, ignoreCase = true)
+            val matchQuery = it.tanggal.contains(query, true) || it.status.contains(query, true)
+            
+            // Assume tanggal format contains day, month, year as components. Typical format YYYY-MM-DD
+            // By just checking if it contains the pieces, we handle basic cases:
+            val matchTgl = tgl.isEmpty() || it.tanggal.contains("-$tgl") || it.tanggal.startsWith("$tgl-")
+            val matchBulan = bulan.isEmpty() || it.tanggal.contains("-$bulan-")
+            val matchTahun = tahun.isEmpty() || it.tanggal.contains(tahun)
+
+            matchQuery && matchTgl && matchBulan && matchTahun
         }
         adapter.updateData(filteredList)
     }

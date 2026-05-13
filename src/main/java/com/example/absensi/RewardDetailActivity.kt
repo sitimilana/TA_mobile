@@ -27,6 +27,7 @@ class RewardDetailActivity : AppCompatActivity() {
 
         // 1. Inisialisasi Navigasi Bawah
         NavigationUtils.setupBottomNav(this)
+        NavigationUtils.setupHeaderWithUserData(this)
 
         // 2. Inisialisasi View
         tvDetailName = findViewById(R.id.tvDetailRewardName)
@@ -37,13 +38,7 @@ class RewardDetailActivity : AppCompatActivity() {
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
         tvRole = findViewById(R.id.tvRole)
 
-        // 3. Tampilkan Data User di Header (dari SharedPreferences)
-        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-        val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
-        tvWelcomeName.text = "Selamat Datang, $namaLengkap"
-        tvRole.text = "Karyawan"
-
-        // 4. Ambil ID Reward dari Intent
+        // 3. Ambil ID Reward dari Intent
         val rewardId = intent.getIntExtra("REWARD_ID", -1)
         if (rewardId != -1) {
             fetchRewardDetail(rewardId)

@@ -19,6 +19,7 @@ class RiwayatPengajuanActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_riwayat_pengajuan)
         NavigationUtils.setupBottomNav(this)
+        NavigationUtils.setupHeaderWithUserData(this)
 
         rvRiwayatCuti = findViewById(R.id.rvRiwayatCuti)
         ambilDataCuti()
