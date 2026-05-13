@@ -66,10 +66,9 @@ class PresensiActivity : AppCompatActivity() {
     private var currentLon: Double = 0.0
     private var jenisAbsen: String = "masuk"
 
-    // KOORDINAT KANTOR
-    private var officeLat = -7.7509239
-    private var officeLon = 111.9946412
-    private var maxRadius = 100.0
+    private var officeLat: Double = 0.0
+    private var officeLon: Double = 0.0
+    private var maxRadius: Double = 0.0
     private var isOfficeConfigReady = false
 
     private val requestPermissionLauncher =
@@ -208,28 +207,20 @@ class PresensiActivity : AppCompatActivity() {
 
     private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
         val results = FloatArray(1)
-        // Fungsi bawaan Android ini SELALU mengembalikan nilai dalam satuan METER
         Location.distanceBetween(userLat, userLon, officeLat, officeLon, results)
         val distanceInMeters = results[0]
 
-        // 1. KONVERSI METER KE KILOMETER
-        val distanceInKm = distanceInMeters / 1000.0
-
         Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
         Log.d("ABSENSI_DEBUG", "Jarak ke Kantor (Meter): $distanceInMeters")
-        Log.d("ABSENSI_DEBUG", "Jarak ke Kantor (KM): $distanceInKm")
-
-        // 2. Bandingkan dengan maxRadius yang sekarang bersatuan KM
-        return if (distanceInKm <= maxRadius) {
+        Log.d("ABSENSI_DEBUG", "Batas Radius (Meter): $maxRadius")
+        return if (distanceInMeters <= maxRadius) {
             true
         } else {
-            // 3. Perbaiki Toast agar menampilkan angka desimal yang benar, bukan pakai .toInt()
-            // Menggunakan String.format untuk membatasi 3 angka di belakang koma
-            val jarakFormat = String.format("%.3f", distanceInKm)
-
+            val jarakFormat = String.format("%.0f", distanceInMeters)
+            val batasFormat = String.format("%.0f", maxRadius)
             Toast.makeText(
                 this,
-                "Gagal! Jarak Anda ${jarakFormat}km dari kantor (Maks ${maxRadius}km)",
+                "Gagal! Jarak Anda ${jarakFormat}m dari kantor (Maks ${batasFormat}m)",
                 Toast.LENGTH_LONG
             ).show()
 
