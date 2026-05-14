@@ -16,7 +16,9 @@ import retrofit2.http.Query
 
 interface ApiService {
     @GET("config-presensi")
-    fun getConfigPresensi(): Call<ConfigResponse>
+    fun getConfigPresensi(
+        @Header("Authorization") token: String
+    ): Call<ConfigResponse>
 
     @FormUrlEncoded
     @POST("login")

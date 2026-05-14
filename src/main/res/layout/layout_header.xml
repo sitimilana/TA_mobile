@@ -9,10 +9,11 @@
     android:paddingTop="32dp"
     android:paddingBottom="16dp">
 
+    <!-- 1. Icon Profil dikecilkan menjadi 48dp -->
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/ivProfile"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:src="@drawable/profile"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -34,13 +35,14 @@
         app:layout_constraintStart_toEndOf="@id/ivProfile"
         app:layout_constraintTop_toTopOf="@id/ivProfile">
 
+        <!-- Ukuran teks disesuaikan agar seimbang dengan foto profil -->
         <TextView
             android:id="@+id/tvWelcomeName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Selamat Datang"
             android:textColor="@color/black"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:letterSpacing="-0.02" />
 
@@ -51,7 +53,7 @@
             android:layout_marginTop="2dp"
             android:text="Loading..."
             android:textColor="@color/role_text"
-            android:textSize="13sp" />
+            android:textSize="12sp" />
     </LinearLayout>
 
     <ImageView
@@ -60,7 +62,22 @@
         android:layout_height="40dp"
         android:scaleType="fitCenter"
         android:src="@drawable/logoshe"
+        app:layout_constraintEnd_toStartOf="@id/btnLogout"
+        app:layout_constraintTop_toTopOf="@id/ivProfile"
+        app:layout_constraintBottom_toBottomOf="@id/ivProfile" />
+
+    <!-- 2. Tombol Logout dikecilkan menjadi 32dp agar logo di sebelahnya ikut maju / mepet -->
+    <ImageButton
+        android:id="@+id/btnLogout"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_logout"
+        android:scaleType="centerInside"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Logout"
+        app:tint="@color/role_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/ivProfile"
         app:layout_constraintBottom_toBottomOf="@id/ivProfile" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

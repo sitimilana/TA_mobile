@@ -4,8 +4,10 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.card.MaterialCardView
 
@@ -28,6 +30,12 @@ class DashboardActivity : AppCompatActivity() {
         setContentView(R.layout.activity_dashboard)
         NavigationUtils.setupBottomNav(this)
         NavigationUtils.setupHeaderWithUserData(this)
+
+        // Tambah Logout Button Listener
+        val btnLogout: ImageButton = findViewById(R.id.btnLogout)
+        btnLogout.setOnClickListener {
+            showLogoutConfirmation()
+        }
 
         // ...existing code...
         val cardStatusHariIni: MaterialCardView = findViewById(R.id.cardStatusHariIni)
@@ -131,5 +139,33 @@ class DashboardActivity : AppCompatActivity() {
                 Toast.makeText(this@DashboardActivity, "Gagal memuat status hari ini", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    // FUNGSI LOGOUT
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Apakah Anda yakin ingin keluar?")
+            .setPositiveButton("Ya, Logout") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun logout() {
+        // Hapus semua data session di SharedPreferences
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.clear() // Hapus semua data
+        editor.apply()
+
+        Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show()
+
+        // Kembali ke LoginActivity
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear stack
+        startActivity(intent)
+        finish()
     }
 }

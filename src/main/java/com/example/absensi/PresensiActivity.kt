@@ -16,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -40,6 +41,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlinx.coroutines.*
+
 
 class PresensiActivity : AppCompatActivity() {
 
@@ -70,6 +73,7 @@ class PresensiActivity : AppCompatActivity() {
     private var officeLon: Double = 0.0
     private var maxRadius: Double = 0.0
     private var isOfficeConfigReady = false
+    private var refreshConfigJob: Job? = null
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -123,6 +127,9 @@ class PresensiActivity : AppCompatActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         setCaptureEnabled(false)
         fetchOfficeConfig()
+        
+        // Jangan mulai refresh background di onCreate untuk menghindari race condition
+        // Refresh akan dimulai di onResume
 
         if (allPermissionsGranted()) {
             startCamera()
@@ -148,13 +155,23 @@ class PresensiActivity : AppCompatActivity() {
     }
 
     private fun fetchOfficeConfig() {
-        ApiConfig.getApiService().getConfigPresensi()
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val token = sharedPref.getString("TOKEN", "") ?: ""
+        val bearerToken = "Bearer $token"
+
+        ApiConfig.getApiService().getConfigPresensi(bearerToken)
             .enqueue(object : Callback<ConfigResponse> {
                 override fun onResponse(call: Call<ConfigResponse>, response: Response<ConfigResponse>) {
                     val config = response.body()?.data
                     val latFromConfig = config?.officeLat
                     val lonFromConfig = config?.officeLon
                     val radiusFromConfig = config?.maxRadius
+
+                    Log.d("CONFIG_DEBUG", "CONFIG RAW: ${response.body()}")
+                    Log.d("CONFIG_DEBUG", "LAT: $latFromConfig")
+                    Log.d("CONFIG_DEBUG", "LON: $lonFromConfig")
+                    Log.d("CONFIG_DEBUG", "RADIUS: $radiusFromConfig")
+                    Log.d("CONFIG_DEBUG", "Response Code: ${response.code()}, Body: ${response.body()}")
 
                     if (!response.isSuccessful) {
                         disableCaptureForConfigFailure("Server konfigurasi mengembalikan error (${response.code()}).")
@@ -167,24 +184,36 @@ class PresensiActivity : AppCompatActivity() {
                     }
 
                     if (latFromConfig == null || lonFromConfig == null || radiusFromConfig == null) {
+                        Log.e("CONFIG_DEBUG", "Data null - LAT: $latFromConfig, LON: $lonFromConfig, RADIUS: $radiusFromConfig")
                         disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak lengkap.")
                         return
                     }
 
                     if (!isValidOfficeConfig(latFromConfig, lonFromConfig, radiusFromConfig)) {
+                        Log.e("CONFIG_DEBUG", "Data tidak valid - LAT: $latFromConfig, LON: $lonFromConfig, RADIUS: $radiusFromConfig")
                         disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak valid.")
                         return
                     }
 
+                    // Hanya update jika data mengalami perubahan
+                    val isConfigChanged = (officeLat != latFromConfig) || (officeLon != lonFromConfig) || (maxRadius != radiusFromConfig)
+                    
                     officeLat = latFromConfig
                     officeLon = lonFromConfig
                     maxRadius = radiusFromConfig
                     isOfficeConfigReady = true
+                    
+                    Log.d("CONFIG_DEBUG", "Config berhasil diupdate - LAT: $officeLat, LON: $officeLon, RADIUS: $maxRadius")
+                    if (isConfigChanged) {
+                        Log.d("CONFIG_DEBUG", "Konfigurasi lokasi kantor telah diperbarui")
+                    }
+                    
                     setCaptureEnabled(true)
                 }
 
                 override fun onFailure(call: Call<ConfigResponse>, t: Throwable) {
-                    disableCaptureForConfigFailure("Gagal terhubung ke server konfigurasi.")
+                    Log.e("CONFIG_DEBUG", "Gagal fetch config: ${t.message}")
+                    disableCaptureForConfigFailure("Gagal terhubung ke server konfigurasi: ${t.message}")
                 }
             })
     }
@@ -206,13 +235,26 @@ class PresensiActivity : AppCompatActivity() {
     }
 
     private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
+        if (!isOfficeConfigReady) {
+            Toast.makeText(this, "Konfigurasi lokasi kantor belum siap. Silakan coba lagi.", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (maxRadius <= 0) {
+            Log.e("ABSENSI_DEBUG", "ERROR: maxRadius tidak valid: $maxRadius")
+            Toast.makeText(this, "Konfigurasi radius tidak valid. Hubungi administrator.", Toast.LENGTH_LONG).show()
+            return false
+        }
+
         val results = FloatArray(1)
         Location.distanceBetween(userLat, userLon, officeLat, officeLon, results)
         val distanceInMeters = results[0]
 
         Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
+        Log.d("ABSENSI_DEBUG", "Lokasi Kantor: $officeLat, $officeLon")
         Log.d("ABSENSI_DEBUG", "Jarak ke Kantor (Meter): $distanceInMeters")
         Log.d("ABSENSI_DEBUG", "Batas Radius (Meter): $maxRadius")
+        
         return if (distanceInMeters <= maxRadius) {
             true
         } else {
@@ -234,12 +276,18 @@ class PresensiActivity : AppCompatActivity() {
             if (location != null) {
                 currentLat = location.latitude
                 currentLon = location.longitude
-                tvLocationStatus.text = "Lokasi Terkunci: ${String.format("%.4f", currentLat)}, ${String.format("%.4f", currentLon)}"
+                tvLocationStatus.text = "Lokasi GPS Terkunci: ${String.format("%.4f", currentLat)}, ${String.format("%.4f", currentLon)}"
                 tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+                Log.d("LOCATION_DEBUG", "GPS Location: $currentLat, $currentLon")
             } else {
-                tvLocationStatus.text = "Gagal mengunci lokasi"
+                tvLocationStatus.text = "Gagal mengunci lokasi GPS"
                 tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+                Log.w("LOCATION_DEBUG", "Lokasi GPS tidak tersedia")
             }
+        }.addOnFailureListener { exception ->
+            Log.e("LOCATION_DEBUG", "Error getting location: ${exception.message}")
+            tvLocationStatus.text = "Error: ${exception.message}"
+            tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
         }
     }
 
@@ -364,5 +412,35 @@ class PresensiActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+        refreshConfigJob?.cancel()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh config ketika activity resume untuk memastikan data selalu terbaru
+        if (allPermissionsGranted()) {
+            getLocation()
+        }
+        startPeriodicConfigRefresh()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Stop refresh background ketika activity pause
+        refreshConfigJob?.cancel()
+    }
+
+    private fun startPeriodicConfigRefresh() {
+        // Cancel job sebelumnya jika ada
+        refreshConfigJob?.cancel()
+        
+        // Mulai refresh otomatis setiap 5 menit (300 detik)
+        refreshConfigJob = lifecycleScope.launch {
+            while (isActive) {
+                delay(5 * 60 * 1000) // 5 minutes = 300,000 ms
+                fetchOfficeConfig()
+                Log.d("CONFIG_DEBUG", "Periodic config refresh initiated")
+            }
+        }
     }
 }

@@ -13,6 +13,13 @@ object ApiConfig {
         val loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
         val client = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addNetworkInterceptor { chain ->
+                val response = chain.proceed(chain.request())
+                response.newBuilder()
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Pragma", "no-cache")
+                    .build()
+            }
             .connectTimeout(60, TimeUnit.SECONDS) // Waktu maksimal untuk terhubung ke server
             .readTimeout(60, TimeUnit.SECONDS)    // Waktu maksimal untuk menunggu balasan server
             .writeTimeout(60, TimeUnit.SECONDS)

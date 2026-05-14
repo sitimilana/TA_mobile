@@ -23,6 +23,18 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        // CEK APAKAH SUDAH LOGIN SEBELUMNYA
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val token = sharedPref.getString("TOKEN", "")
+        
+        if (!token.isNullOrEmpty()) {
+            // User sudah login sebelumnya, arahkan ke Dashboard
+            val intent = Intent(this, DashboardActivity::class.java)
+            startActivity(intent)
+            finish()
+            return // Stop eksekusi kode selanjutnya
+        }
+
         // Hubungkan variabel dengan ID di XML
         etUsername = findViewById(R.id.etUsername)
         etPassword = findViewById(R.id.etPassword)
