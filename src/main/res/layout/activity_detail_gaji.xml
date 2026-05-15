@@ -8,7 +8,6 @@
     android:layout_height="match_parent"
     android:background="@color/bg_dashboard">
 
-    <!-- Header -->
     <include
         android:id="@+id/header_layout"
         layout="@layout/layout_header"
@@ -66,7 +65,6 @@
                 android:orientation="vertical"
                 android:paddingBottom="24dp">
 
-                <!-- Section Penerimaan -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -101,23 +99,18 @@
                     </LinearLayout>
 
                     <LinearLayout style="@style/SalaryRowStyle">
-                        <TextView style="@style/SalaryLabelStyle" android:text="Leader Kursus" />
+                        <TextView style="@style/SalaryLabelStyle" android:text="Tunjangan Jabatan" />
                         <TextView android:id="@+id/tvValLeaderKursus" style="@style/SalaryValueStyle" android:text="Rp 0" />
                     </LinearLayout>
 
                     <LinearLayout style="@style/SalaryRowStyle">
-                        <TextView style="@style/SalaryLabelStyle" android:text="Kinerja" />
+                        <TextView style="@style/SalaryLabelStyle" android:text="Insentif Kinerja" />
                         <TextView android:id="@+id/tvValKinerja" style="@style/SalaryValueStyle" android:text="Rp 0" />
                     </LinearLayout>
 
                     <LinearLayout style="@style/SalaryRowStyle">
-                        <TextView style="@style/SalaryLabelStyle" android:text="Program" />
+                        <TextView style="@style/SalaryLabelStyle" android:text="Tunjangan Program" />
                         <TextView android:id="@+id/tvValProgram" style="@style/SalaryValueStyle" android:text="Rp 0" />
-                    </LinearLayout>
-
-                    <LinearLayout style="@style/SalaryRowStyle">
-                        <TextView style="@style/SalaryLabelStyle" android:text="BPJS Disnaker (Perusahaan)" />
-                        <TextView android:id="@+id/tvValBpjsPenerimaan" style="@style/SalaryValueStyle" android:text="Rp 0" />
                     </LinearLayout>
 
                     <LinearLayout style="@style/SalaryRowStyle">
@@ -126,7 +119,7 @@
                     </LinearLayout>
 
                     <LinearLayout style="@style/SalaryRowStyle">
-                        <TextView style="@style/SalaryLabelStyle" android:text="Bonus" />
+                        <TextView style="@style/SalaryLabelStyle" android:text="Bonus Tambahan" />
                         <TextView android:id="@+id/tvValBonus" style="@style/SalaryValueStyle" android:text="Rp 0" />
                     </LinearLayout>
 
@@ -138,7 +131,6 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Section Potongan -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -179,8 +171,13 @@
                     </LinearLayout>
 
                     <LinearLayout style="@style/SalaryRowStyle">
-                        <TextView style="@style/SalaryLabelStyle" android:text="BPJS Disnaker (Karyawan)" />
+                        <TextView style="@style/SalaryLabelStyle" android:text="BPJS Kesehatan &amp; TK" />
                         <TextView android:id="@+id/tvValBpjsPotongan" style="@style/SalaryValueStyle" android:textColor="#E53935" android:text="Rp 0" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/SalaryRowStyle">
+                        <TextView style="@style/SalaryLabelStyle" android:text="Potongan Lain-lain" />
+                        <TextView android:id="@+id/tvValPotLain" style="@style/SalaryValueStyle" android:textColor="#E53935" android:text="Rp 0" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginVertical="12dp" />
@@ -191,7 +188,6 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Footer Gaji Bersih -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
@@ -211,7 +207,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="TOTAL GAJI BERSIH (SISA GAJI)"
+                        android:text="TOTAL GAJI BERSIH (TAKE HOME PAY)"
                         android:textColor="#757575"
                         android:textSize="12sp"
                         android:letterSpacing="0.2"

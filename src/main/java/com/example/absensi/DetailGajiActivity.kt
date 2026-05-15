@@ -68,7 +68,7 @@ class DetailGajiActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvValLeaderKursus).text = formatRupiah(penerimaan?.tunjanganJabatan)
         findViewById<TextView>(R.id.tvValKinerja).text = formatRupiah(penerimaan?.insentifKinerja)
         findViewById<TextView>(R.id.tvValProgram).text = formatRupiah(penerimaan?.tunjanganProgram)
-        findViewById<TextView>(R.id.tvValBpjsPenerimaan).text = formatRupiah(penerimaan?.tunjanganBpjs)
+        // findViewById<TextView>(R.id.tvValBpjsPenerimaan) <- DIHAPUS
         findViewById<TextView>(R.id.tvValTunjLainnya).text = formatRupiah(penerimaan?.lainLain)
         findViewById<TextView>(R.id.tvValBonus).text = formatRupiah(penerimaan?.bonus)
 
@@ -79,11 +79,14 @@ class DetailGajiActivity : AppCompatActivity() {
         val potongan = data.potongan
         findViewById<TextView>(R.id.tvValPotAbsen).text = formatRupiah(potongan?.potonganAbsen)
         findViewById<TextView>(R.id.tvValCashBon1).text = formatRupiah(potongan?.cashBon)
-        findViewById<TextView>(R.id.tvValCashBon2).text = formatRupiah(0) // Tidak ada di API untuk cashbon_kedua pada response
+        // Jika API Laravel tidak mengirimkan data cash_bon_2 di respon getDetailSlipGaji, ini di set ke 0
+        // Atau jika Anda sudah menambahkannya ke JSON, panggil di sini
+        findViewById<TextView>(R.id.tvValCashBon2).text = formatRupiah(potongan?.cashBon2)
         findViewById<TextView>(R.id.tvValBpjsPotongan).text = formatRupiah(potongan?.potonganBpjs)
+        findViewById<TextView>(R.id.tvValPotLain).text = formatRupiah(potongan?.potonganLain) // TAMBAHAN BARU
 
-        // Total Potongan
-        val totalPotongan = (potongan?.potonganAbsen ?: 0) + (potongan?.cashBon ?: 0) + (potongan?.potonganBpjs ?: 0) + (potongan?.potonganLain ?: 0)
+        // Total Potongan (Ditambah dengan potonganLain)
+        val totalPotongan = (potongan?.potonganAbsen ?: 0) + (potongan?.cashBon ?: 0) + (potongan?.cashBon2 ?: 0) + (potongan?.potonganBpjs ?: 0) + (potongan?.potonganLain ?: 0)
         findViewById<TextView>(R.id.tvValTotalPotongan).text = formatRupiah(totalPotongan)
 
         // Take Home Pay (Gaji Bersih)

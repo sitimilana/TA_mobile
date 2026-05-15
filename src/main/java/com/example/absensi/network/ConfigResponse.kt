@@ -9,7 +9,6 @@ data class ConfigResponse(
 )
 
 data class ConfigData(
-
     @SerializedName("office_lat")
     val officeLat: Double,
 
@@ -17,5 +16,12 @@ data class ConfigData(
     val officeLon: Double,
 
     @SerializedName("max_radius")
-    val maxRadius: Double
+    val maxRadius: Double,
+
+    // TAMBAHKAN DUA BARIS INI
+    @SerializedName("is_libur")
+    val isLibur: Boolean?,
+
+    @SerializedName("pesan_libur")
+    val pesanLibur: String?
 )

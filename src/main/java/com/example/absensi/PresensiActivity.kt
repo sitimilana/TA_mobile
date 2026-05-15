@@ -2,6 +2,7 @@ package com.example.absensi
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.location.Location
@@ -33,6 +34,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -42,7 +44,6 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlinx.coroutines.*
-
 
 class PresensiActivity : AppCompatActivity() {
 
@@ -73,6 +74,8 @@ class PresensiActivity : AppCompatActivity() {
     private var officeLon: Double = 0.0
     private var maxRadius: Double = 0.0
     private var isOfficeConfigReady = false
+    private var isHariLibur = false
+    private var pesanLiburStr = ""
     private var refreshConfigJob: Job? = null
 
     private val requestPermissionLauncher =
@@ -127,9 +130,6 @@ class PresensiActivity : AppCompatActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         setCaptureEnabled(false)
         fetchOfficeConfig()
-        
-        // Jangan mulai refresh background di onCreate untuk menghindari race condition
-        // Refresh akan dimulai di onResume
 
         if (allPermissionsGranted()) {
             startCamera()
@@ -143,12 +143,17 @@ class PresensiActivity : AppCompatActivity() {
         }
 
         btnCapture.setOnClickListener {
-            if (!isOfficeConfigReady) {
+            // Urutan Pengecekan: Libur -> Config -> GPS -> Jarak
+            if (isHariLibur) {
+                // Jika libur, munculkan dialog libur, BUKAN error jarak
+                showErrorDialog("Akses Ditolak", pesanLiburStr)
+            } else if (!isOfficeConfigReady) {
                 Toast.makeText(this, "Konfigurasi lokasi kantor belum tersedia.", Toast.LENGTH_SHORT).show()
             } else if (currentLat == 0.0) {
                 Toast.makeText(this, "Mencari lokasi GPS... Tunggu sampai 'Lokasi Terkunci' muncul.", Toast.LENGTH_SHORT).show()
                 getLocation()
             } else if (checkLocationStatus(currentLat, currentLon)) {
+                // Lolos semua, silakan ambil foto
                 takePhoto()
             }
         }
@@ -163,56 +168,41 @@ class PresensiActivity : AppCompatActivity() {
             .enqueue(object : Callback<ConfigResponse> {
                 override fun onResponse(call: Call<ConfigResponse>, response: Response<ConfigResponse>) {
                     val config = response.body()?.data
+
+                    // 1. PRIORITAS UTAMA: CEK HARI LIBUR TERLEBIH DAHULU
+                    if (config?.isLibur == true) {
+                        isHariLibur = true
+                        pesanLiburStr = config.pesanLibur ?: "Hari ini adalah hari libur."
+                        setCaptureEnabled(false) // Matikan tombol kamera
+                        showErrorDialog("Akses Ditolak", pesanLiburStr) // Langsung munculkan peringatan
+                        return // Hentikan proses, tidak perlu cek radius
+                    }
+
+                    // 2. JIKA BUKAN LIBUR, LANJUT CEK RADIUS
+                    isHariLibur = false
                     val latFromConfig = config?.officeLat
                     val lonFromConfig = config?.officeLon
                     val radiusFromConfig = config?.maxRadius
 
-                    Log.d("CONFIG_DEBUG", "CONFIG RAW: ${response.body()}")
-                    Log.d("CONFIG_DEBUG", "LAT: $latFromConfig")
-                    Log.d("CONFIG_DEBUG", "LON: $lonFromConfig")
-                    Log.d("CONFIG_DEBUG", "RADIUS: $radiusFromConfig")
-                    Log.d("CONFIG_DEBUG", "Response Code: ${response.code()}, Body: ${response.body()}")
-
-                    if (!response.isSuccessful) {
-                        disableCaptureForConfigFailure("Server konfigurasi mengembalikan error (${response.code()}).")
-                        return
-                    }
-
-                    if (response.body()?.success != true) {
-                        disableCaptureForConfigFailure(response.body()?.message ?: "Konfigurasi lokasi kantor ditolak server.")
+                    if (!response.isSuccessful || response.body()?.success != true) {
+                        disableCaptureForConfigFailure(response.body()?.message ?: "Konfigurasi lokasi ditolak server.")
                         return
                     }
 
                     if (latFromConfig == null || lonFromConfig == null || radiusFromConfig == null) {
-                        Log.e("CONFIG_DEBUG", "Data null - LAT: $latFromConfig, LON: $lonFromConfig, RADIUS: $radiusFromConfig")
-                        disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak lengkap.")
+                        disableCaptureForConfigFailure("Data konfigurasi lokasi tidak lengkap.")
                         return
                     }
 
-                    if (!isValidOfficeConfig(latFromConfig, lonFromConfig, radiusFromConfig)) {
-                        Log.e("CONFIG_DEBUG", "Data tidak valid - LAT: $latFromConfig, LON: $lonFromConfig, RADIUS: $radiusFromConfig")
-                        disableCaptureForConfigFailure("Data konfigurasi lokasi kantor tidak valid.")
-                        return
-                    }
-
-                    // Hanya update jika data mengalami perubahan
-                    val isConfigChanged = (officeLat != latFromConfig) || (officeLon != lonFromConfig) || (maxRadius != radiusFromConfig)
-                    
                     officeLat = latFromConfig
                     officeLon = lonFromConfig
                     maxRadius = radiusFromConfig
                     isOfficeConfigReady = true
-                    
-                    Log.d("CONFIG_DEBUG", "Config berhasil diupdate - LAT: $officeLat, LON: $officeLon, RADIUS: $maxRadius")
-                    if (isConfigChanged) {
-                        Log.d("CONFIG_DEBUG", "Konfigurasi lokasi kantor telah diperbarui")
-                    }
-                    
+
                     setCaptureEnabled(true)
                 }
 
                 override fun onFailure(call: Call<ConfigResponse>, t: Throwable) {
-                    Log.e("CONFIG_DEBUG", "Gagal fetch config: ${t.message}")
                     disableCaptureForConfigFailure("Gagal terhubung ke server konfigurasi: ${t.message}")
                 }
             })
@@ -236,13 +226,7 @@ class PresensiActivity : AppCompatActivity() {
 
     private fun checkLocationStatus(userLat: Double, userLon: Double): Boolean {
         if (!isOfficeConfigReady) {
-            Toast.makeText(this, "Konfigurasi lokasi kantor belum siap. Silakan coba lagi.", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
-        if (maxRadius <= 0) {
-            Log.e("ABSENSI_DEBUG", "ERROR: maxRadius tidak valid: $maxRadius")
-            Toast.makeText(this, "Konfigurasi radius tidak valid. Hubungi administrator.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Konfigurasi lokasi belum siap.", Toast.LENGTH_SHORT).show()
             return false
         }
 
@@ -250,22 +234,12 @@ class PresensiActivity : AppCompatActivity() {
         Location.distanceBetween(userLat, userLon, officeLat, officeLon, results)
         val distanceInMeters = results[0]
 
-        Log.d("ABSENSI_DEBUG", "Lokasi User: $userLat, $userLon")
-        Log.d("ABSENSI_DEBUG", "Lokasi Kantor: $officeLat, $officeLon")
-        Log.d("ABSENSI_DEBUG", "Jarak ke Kantor (Meter): $distanceInMeters")
-        Log.d("ABSENSI_DEBUG", "Batas Radius (Meter): $maxRadius")
-        
         return if (distanceInMeters <= maxRadius) {
             true
         } else {
             val jarakFormat = String.format("%.0f", distanceInMeters)
             val batasFormat = String.format("%.0f", maxRadius)
-            Toast.makeText(
-                this,
-                "Gagal! Jarak Anda ${jarakFormat}m dari kantor (Maks ${batasFormat}m)",
-                Toast.LENGTH_LONG
-            ).show()
-
+            Toast.makeText(this, "Gagal! Jarak Anda ${jarakFormat}m (Maks ${batasFormat}m)", Toast.LENGTH_LONG).show()
             false
         }
     }
@@ -276,16 +250,13 @@ class PresensiActivity : AppCompatActivity() {
             if (location != null) {
                 currentLat = location.latitude
                 currentLon = location.longitude
-                tvLocationStatus.text = "Lokasi GPS Terkunci: ${String.format("%.4f", currentLat)}, ${String.format("%.4f", currentLon)}"
+                tvLocationStatus.text = "GPS Terkunci: ${String.format("%.4f", currentLat)}, ${String.format("%.4f", currentLon)}"
                 tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
-                Log.d("LOCATION_DEBUG", "GPS Location: $currentLat, $currentLon")
             } else {
-                tvLocationStatus.text = "Gagal mengunci lokasi GPS"
+                tvLocationStatus.text = "Gagal mengunci lokasi"
                 tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
-                Log.w("LOCATION_DEBUG", "Lokasi GPS tidak tersedia")
             }
         }.addOnFailureListener { exception ->
-            Log.e("LOCATION_DEBUG", "Error getting location: ${exception.message}")
             tvLocationStatus.text = "Error: ${exception.message}"
             tvLocationStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
         }
@@ -311,8 +282,6 @@ class PresensiActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
-
-        // Prevent double clicking
         btnCapture.isEnabled = false
 
         val photoFile = File(cacheDir, SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis()) + ".jpg")
@@ -382,18 +351,22 @@ class PresensiActivity : AppCompatActivity() {
                         Toast.makeText(this@PresensiActivity, response.body()?.message ?: "Absen Berhasil!", Toast.LENGTH_LONG).show()
                         finish()
                     } else {
-                        // Membaca pesan error dari Laravel jika ditolak (misal belum jam 15:00 untuk pulang)
-                        try {
+                        val message = try {
                             val errorString = response.errorBody()?.string()
                             if (errorString != null) {
-                                val jsonObject = org.json.JSONObject(errorString)
-                                val pesanError = jsonObject.getString("message")
-                                Toast.makeText(this@PresensiActivity, pesanError, Toast.LENGTH_LONG).show()
+                                JSONObject(errorString).getString("message")
                             } else {
-                                Toast.makeText(this@PresensiActivity, "Gagal absen. Terjadi kesalahan server.", Toast.LENGTH_SHORT).show()
+                                "Gagal absen. Terjadi kesalahan server."
                             }
                         } catch (e: Exception) {
-                            Toast.makeText(this@PresensiActivity, "Gagal memproses respon server: ${response.code()}", Toast.LENGTH_SHORT).show()
+                            "Gagal memproses respon server: ${response.code()}"
+                        }
+
+                        // Jika Status Code 403 (Libur atau Luar Radius), tampilkan Dialog
+                        if (response.code() == 403) {
+                            showErrorDialog("Akses Ditolak", message)
+                        } else {
+                            Toast.makeText(this@PresensiActivity, message, Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -402,9 +375,26 @@ class PresensiActivity : AppCompatActivity() {
                     pbLoading.visibility = View.GONE
                     btnSubmit.isEnabled = true
                     btnRetake.isEnabled = true
-                    Toast.makeText(this@PresensiActivity, "Koneksi lambat atau terputus: ${t.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@PresensiActivity, "Koneksi lambat/terputus: ${t.message}", Toast.LENGTH_LONG).show()
                 }
             })
+    }
+
+    private fun showErrorDialog(title: String, message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                // Jika pesan berisi kata "libur", langsung tutup halaman presensi
+                if (message.contains("libur", ignoreCase = true) || message.contains("akhir pekan", ignoreCase = true)) {
+                    finish()
+                } else {
+                    hidePreview() // Kembali ke mode kamera
+                }
+            }
+            .show()
     }
 
     private fun allPermissionsGranted() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -417,7 +407,6 @@ class PresensiActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh config ketika activity resume untuk memastikan data selalu terbaru
         if (allPermissionsGranted()) {
             getLocation()
         }
@@ -426,20 +415,15 @@ class PresensiActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Stop refresh background ketika activity pause
         refreshConfigJob?.cancel()
     }
 
     private fun startPeriodicConfigRefresh() {
-        // Cancel job sebelumnya jika ada
         refreshConfigJob?.cancel()
-        
-        // Mulai refresh otomatis setiap 5 menit (300 detik)
         refreshConfigJob = lifecycleScope.launch {
             while (isActive) {
-                delay(5 * 60 * 1000) // 5 minutes = 300,000 ms
+                delay(5 * 60 * 1000)
                 fetchOfficeConfig()
-                Log.d("CONFIG_DEBUG", "Periodic config refresh initiated")
             }
         }
     }

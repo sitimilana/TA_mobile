@@ -45,6 +45,7 @@ data class PenerimaanData(
 data class PotonganData(
     @SerializedName("potongan_absen") val potonganAbsen: Int?,
     @SerializedName("cash_bon") val cashBon: Int?,
+    @SerializedName("cash_bon_2") val cashBon2: Int?,
     @SerializedName("potongan_bpjs") val potonganBpjs: Int?,
     @SerializedName("potongan_lain") val potonganLain: Int?
 )
