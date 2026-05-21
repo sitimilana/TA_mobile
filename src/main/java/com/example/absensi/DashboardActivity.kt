@@ -15,7 +15,7 @@ import com.google.android.material.card.MaterialCardView
 
 import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.RewardItem
-import com.example.absensi.network.RewardResponse
+import com.example.absensi.network.DashboardRewardResponse // DIUBAH: Menggunakan response dashboard baru
 import com.example.absensi.network.RiwayatResponse
 import com.example.absensi.network.PenilaianResponse
 import com.example.absensi.network.PenilaianData
@@ -25,7 +25,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit // DITAMBAHKAN untuk hitung hari
+import java.util.concurrent.TimeUnit
 
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
@@ -40,8 +40,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var tvJamPulangDash: TextView
     private lateinit var tvStatusDash: TextView
     private lateinit var layoutBannerReward: LinearLayout
-    
-    // ← TAMBAHAN: Views untuk sisa cuti
+
     private lateinit var tvSisaCutiDash: TextView
     private lateinit var tvSisaCutiHariIni: TextView
 
@@ -65,8 +64,7 @@ class DashboardActivity : AppCompatActivity() {
         tvJamPulangDash = findViewById(R.id.tvJamPulangDash)
         tvStatusDash = findViewById(R.id.tvStatusDash)
         layoutBannerReward = findViewById(R.id.layoutBannerReward)
-        
-        // ← TAMBAHAN: Initialize views sisa cuti
+
         tvSisaCutiDash = findViewById(R.id.tvSisaCutiDash)
         tvSisaCutiHariIni = findViewById(R.id.tvSisaCutiHariIni)
         barChartKinerja = findViewById(R.id.barChartKinerja)
@@ -102,7 +100,7 @@ class DashboardActivity : AppCompatActivity() {
         fetchPresensiHariIni()
         fetchMyRewardData()
         fetchDataKinerjaChart()
-        fetchSisaCuti()  // ← TAMBAHAN: Fetch sisa cuti
+        fetchSisaCuti()
     }
 
     private fun fetchPresensiHariIni() {
@@ -162,22 +160,23 @@ class DashboardActivity : AppCompatActivity() {
         })
     }
 
+    // DIUBAH: Menggunakan getDashboardReward dan DashboardRewardResponse
     private fun fetchMyRewardData() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val token = "Bearer ${sharedPref.getString("TOKEN", "")}"
 
-        ApiConfig.getApiService().getRewards(token).enqueue(object : Callback<RewardResponse> {
-            override fun onResponse(call: Call<RewardResponse>, response: Response<RewardResponse>) {
+        ApiConfig.getApiService().getDashboardReward(token).enqueue(object : Callback<DashboardRewardResponse> {
+            override fun onResponse(call: Call<DashboardRewardResponse>, response: Response<DashboardRewardResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val rewardList = response.body()?.data ?: emptyList()
+                    val dashboardData = response.body()?.data
+                    val rewardList = dashboardData?.rewardHistory ?: emptyList() // Mengambil history dengan properti camelCase baru
                     checkMyReward(rewardList)
                 }
             }
-            override fun onFailure(call: Call<RewardResponse>, t: Throwable) {}
+            override fun onFailure(call: Call<DashboardRewardResponse>, t: Throwable) {}
         })
     }
 
-    // YANG DIUBAH: Logika hilangnya banner menjadi 7 Hari setelah tanggal_reward dari database
     private fun checkMyReward(listReward: List<RewardItem>) {
         if (listReward.isEmpty()) {
             layoutBannerReward.visibility = View.GONE
@@ -188,13 +187,11 @@ class DashboardActivity : AppCompatActivity() {
 
         if (latestReward != null) {
             try {
-                // 1. Ekstrak teks bulan untuk ditampilkan di banner (misal: "April")
-                val parts = latestReward.tanggal.split("-") // Format: "yyyy-MM-dd"
+                val parts = latestReward.tanggal.split("-")
                 if (parts.size >= 3) {
                     val inputYear = parts[0].toInt()
                     val inputMonth = parts[1].toInt()
 
-                    // MUNDUR 1 BULAN: Jika reward diinput Mei, berarti untuk kinerja bulan April
                     var rewardMonth = inputMonth - 1
                     var rewardYear = inputYear
                     if (rewardMonth <= 0) {
@@ -202,7 +199,6 @@ class DashboardActivity : AppCompatActivity() {
                         rewardYear -= 1
                     }
 
-                    // 2. Hitung selisih hari antara "Hari Ini" dengan "Tanggal Pemberian Reward"
                     val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     val rewardDate = sdf.parse(latestReward.tanggal)
                     val currentDate = Date()
@@ -211,7 +207,6 @@ class DashboardActivity : AppCompatActivity() {
                         val diffInMillis = currentDate.time - rewardDate.time
                         val diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMillis)
 
-                        // 3. LOGIKA EXPIRED: Tampilkan jika selisihnya 7 hari atau kurang
                         if (diffInDays <= 7) {
                             layoutBannerReward.visibility = View.VISIBLE
 
@@ -221,7 +216,6 @@ class DashboardActivity : AppCompatActivity() {
                             val tvPesanReward = layoutBannerReward.getChildAt(1) as TextView
                             tvPesanReward.text = "Anda terpilih sebagai Karyawan Terbaik bulan $bulanTeks $rewardYear!"
                         } else {
-                            // Sembunyikan jika sudah lewat 7 hari dari tanggal reward
                             layoutBannerReward.visibility = View.GONE
                         }
                     }
@@ -328,6 +322,7 @@ class DashboardActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+
     private fun fetchSisaCuti() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val token = "Bearer ${sharedPref.getString("TOKEN", "")}"
@@ -338,7 +333,6 @@ class DashboardActivity : AppCompatActivity() {
                     val data = response.body()?.data
 
                     if (data != null) {
-                        // Simpan data lengkap ke SharedPreferences sebagai cache lokal
                         val editor = sharedPref.edit()
                         editor.putInt("SISA_CUTI_TAHUN_INI", data.sisaCutiTahunIni)
                         editor.putInt("TOTAL_CUTI_TAHUN_INI", data.totalCutiTahunIni)
@@ -348,36 +342,32 @@ class DashboardActivity : AppCompatActivity() {
                         editor.putInt("SISA_CUTI_BULAN_INI", data.sisaCutiBulanIni ?: 1)
                         editor.apply()
 
-                        // UPDATE: Tampilkan "TAHUN INI"
                         tvSisaCutiDash.text = "${data.sisaCutiTahunIni} hari"
 
-                        // TAMBAHAN: Tampilkan "BULAN INI"
                         val sisaCutiBulanIni = data.sisaCutiBulanIni ?: 1
                         tvSisaCutiHariIni.text = "$sisaCutiBulanIni hari"
 
-                        // ===== PEWARNAAN TAHUN INI =====
                         when {
                             data.sisaCutiTahunIni <= 0 -> {
-                                tvSisaCutiDash.setTextColor(Color.parseColor("#E53935")) // Merah - Habis
+                                tvSisaCutiDash.setTextColor(Color.parseColor("#E53935"))
                             }
                             data.sisaCutiTahunIni <= 2 -> {
-                                tvSisaCutiDash.setTextColor(Color.parseColor("#FB8C00")) // Oranye - Kritis
+                                tvSisaCutiDash.setTextColor(Color.parseColor("#FB8C00"))
                             }
                             else -> {
-                                tvSisaCutiDash.setTextColor(Color.parseColor("#00C853")) // Hijau - Tersedia
+                                tvSisaCutiDash.setTextColor(Color.parseColor("#00C853"))
                             }
                         }
 
-                        // ===== PEWARNAAN BULAN INI =====
                         when {
                             sisaCutiBulanIni <= 0 -> {
-                                tvSisaCutiHariIni.setTextColor(Color.parseColor("#E53935")) // Merah - Habis
+                                tvSisaCutiHariIni.setTextColor(Color.parseColor("#E53935"))
                             }
                             sisaCutiBulanIni <= 1 -> {
-                                tvSisaCutiHariIni.setTextColor(Color.parseColor("#FB8C00")) // Oranye - Kritis
+                                tvSisaCutiHariIni.setTextColor(Color.parseColor("#FB8C00"))
                             }
                             else -> {
-                                tvSisaCutiHariIni.setTextColor(Color.parseColor("#00C853")) // Hijau - Tersedia
+                                tvSisaCutiHariIni.setTextColor(Color.parseColor("#00C853"))
                             }
                         }
                     }

@@ -9,7 +9,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.RewardItem
-import com.example.absensi.network.RewardResponse
+import com.example.absensi.network.DashboardRewardResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -17,7 +17,7 @@ import retrofit2.Response
 class RewardDetailActivity : AppCompatActivity() {
 
     private lateinit var tvDetailName: TextView
-    private lateinit var tvDetailPeriode: TextView // DITAMBAHKAN
+    private lateinit var tvDetailPeriode: TextView
     private lateinit var tvDetailDate: TextView
     private lateinit var tvDetailScore: TextView
     private lateinit var tvWelcomeName: TextView
@@ -39,7 +39,7 @@ class RewardDetailActivity : AppCompatActivity() {
 
         // 2. Inisialisasi View
         tvDetailName = findViewById(R.id.tvDetailRewardName)
-        tvDetailPeriode = findViewById(R.id.tvDetailRewardPeriode) // DITAMBAHKAN
+        tvDetailPeriode = findViewById(R.id.tvDetailRewardPeriode)
         tvDetailDate = findViewById(R.id.tvDetailRewardDate)
         tvDetailScore = findViewById(R.id.tvDetailRewardScore)
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
@@ -59,10 +59,13 @@ class RewardDetailActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val token = "Bearer ${sharedPref.getString("TOKEN", "")}"
 
-        ApiConfig.getApiService().getRewards(token).enqueue(object : Callback<RewardResponse> {
-            override fun onResponse(call: Call<RewardResponse>, response: Response<RewardResponse>) {
+        ApiConfig.getApiService().getDashboardReward(token).enqueue(object : Callback<DashboardRewardResponse> {
+            override fun onResponse(call: Call<DashboardRewardResponse>, response: Response<DashboardRewardResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val reward = response.body()?.data?.find { it.id == id }
+
+                    val rewardList = response.body()?.data?.rewardHistory ?: emptyList()
+                    val reward = rewardList.find { it.id == id }
+
                     if (reward != null) {
                         displayReward(reward)
                     } else {
@@ -73,22 +76,22 @@ class RewardDetailActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onFailure(call: Call<RewardResponse>, t: Throwable) {
+            override fun onFailure(call: Call<DashboardRewardResponse>, t: Throwable) {
                 Toast.makeText(this@RewardDetailActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
     private fun displayReward(reward: RewardItem) {
-        tvDetailName.text = reward.nama
+        // PERBAIKAN: Jika nilai dari JSON server murni null, paksa teks tampil agar tidak kosong/rusak
+        tvDetailName.text = if (!reward.nama.isNullOrEmpty()) reward.nama else "Karyawan Absensi"
         tvDetailDate.text = reward.tanggal
-        tvDetailScore.text = reward.skor.toString()
+        tvDetailScore.text = "Skor Kinerja: ${reward.skor}"
 
-        // DITAMBAHKAN: Mengambil info periode dari kolom keterangan database
-        tvDetailPeriode.text = reward.alasan // Menggunakan properti alasan/keterangan yang menampung string DB tersebut
+        // Mengambil info periode dari kolom keterangan database
+        tvDetailPeriode.text = reward.alasan
     }
 
-    // Fungsi Dialog Konfirmasi Logout
     private fun showLogoutConfirmation() {
         AlertDialog.Builder(this)
             .setTitle("Logout")
@@ -100,7 +103,6 @@ class RewardDetailActivity : AppCompatActivity() {
             .show()
     }
 
-    // Fungsi Hapus Sesi dan Kembali ke Login
     private fun logout() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val editor = sharedPref.edit()

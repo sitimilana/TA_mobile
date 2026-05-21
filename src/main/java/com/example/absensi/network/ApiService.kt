@@ -83,7 +83,7 @@ interface ApiService {
     @GET("rewards")
     fun getRewards(
         @Header("Authorization") token: String
-    ): Call<RewardResponse>
+    ): Call<DashboardRewardResponse>
 
     @GET("penilaian/dashboard")
     fun getDashboardReward(

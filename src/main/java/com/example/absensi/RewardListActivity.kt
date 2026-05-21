@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.absensi.adapter.RewardAdapter
 import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.RewardItem
-import com.example.absensi.network.RewardResponse
+import com.example.absensi.network.DashboardRewardResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -49,7 +49,7 @@ class RewardListActivity : AppCompatActivity() {
         NavigationUtils.setupBottomNav(this)
         NavigationUtils.setupHeaderWithUserData(this)
 
-        // DITAMBAHKAN: Hubungkan tombol Logout via Header
+        // Hubungkan tombol Logout via Header
         val btnLogout: ImageButton = findViewById(R.id.btnLogout)
         btnLogout.setOnClickListener {
             showLogoutConfirmation()
@@ -64,6 +64,14 @@ class RewardListActivity : AppCompatActivity() {
         bannerTopPerformer = findViewById(R.id.bannerTopPerformer)
 
         rvReward.layoutManager = LinearLayoutManager(this)
+
+        // PERBAIKAN UTAMA 1: Inisialisasi Adapter dibuat sekali saja di onCreate
+        adapter = RewardAdapter(mutableListOf()) { reward ->
+            val intent = Intent(this, RewardDetailActivity::class.java)
+            intent.putExtra("REWARD_ID", reward.id)
+            startActivity(intent)
+        }
+        rvReward.adapter = adapter
 
         setupSpinners()
         setupListeners()
@@ -107,24 +115,16 @@ class RewardListActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val token = "Bearer ${sharedPref.getString("TOKEN", "")}"
 
-        ApiConfig.getApiService().getRewards(token).enqueue(object : Callback<RewardResponse> {
-            override fun onResponse(call: Call<RewardResponse>, response: Response<RewardResponse>) {
+        ApiConfig.getApiService().getDashboardReward(token).enqueue(object : Callback<DashboardRewardResponse> {
+            override fun onResponse(call: Call<DashboardRewardResponse>, response: Response<DashboardRewardResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val rawData = response.body()?.data ?: emptyList()
+                    val dashboardData = response.body()?.data
+                    val rawData = dashboardData?.rewardHistory ?: emptyList()
 
+                    // Filter kandidat yang nilainya memadai masuk bursa reward
                     val candidates = rawData.filter { it.skor >= 85 }
 
-
-                    // --- LOGIKA MUNCULKAN BANNER "SELAMAT" JIKA DAPAT REWARD BULAN INI ---
-                    val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
-                    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-
-                    val isTopThisMonth = candidates.any { item ->
-                        val parts = item.tanggal.split("-")
-                        val itemYear = parts.getOrNull(0)?.toIntOrNull() ?: 0
-                        val itemMonth = parts.getOrNull(1)?.toIntOrNull() ?: 0
-                        itemYear == currentYear && itemMonth == currentMonth
-                    }
+                    val isTopThisMonth = dashboardData?.isTopPerformer ?: false
 
                     if (isTopThisMonth) {
                         bannerTopPerformer.visibility = View.VISIBLE
@@ -133,14 +133,15 @@ class RewardListActivity : AppCompatActivity() {
                     }
 
                     allRewards = candidates
-                    setAdapter(allRewards)
 
+                    // PERBAIKAN UTAMA 2: Gunakan updateData() bawaan adapter agar data ter-refresh
+                    adapter.updateData(allRewards)
                 } else {
-                    Toast.makeText(this@RewardListActivity, "Gagal memuat data", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@RewardListActivity, "Gagal memuat data reward", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            override fun onFailure(call: Call<RewardResponse>, t: Throwable) {
+            override fun onFailure(call: Call<DashboardRewardResponse>, t: Throwable) {
                 Toast.makeText(this@RewardListActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
@@ -159,11 +160,12 @@ class RewardListActivity : AppCompatActivity() {
         }
 
         val filteredList = allRewards.filter { item ->
+            // Mengamankan pencarian keyword nama jika data nama dikirim null dari server
+            val nameText = item.nama?.lowercase() ?: ""
             val matchKeyword =
-                (item.nama?.lowercase()?.contains(keyword) == true) ||
+                nameText.contains(keyword) ||
                         (item.alasan.lowercase().contains(keyword)) ||
                         (item.tanggal.lowercase().contains(keyword))
-
 
             val dateParts = item.tanggal.split("-")
             val itemYear = dateParts.getOrNull(0) ?: ""
@@ -175,23 +177,14 @@ class RewardListActivity : AppCompatActivity() {
             matchKeyword && matchBulan && matchTahun
         }
 
-        setAdapter(filteredList)
+        // PERBAIKAN UTAMA 3: Gunakan updateData untuk hasil filter lokal
+        adapter.updateData(filteredList)
 
         if (filteredList.isEmpty() && allRewards.isNotEmpty()) {
             Toast.makeText(this, "Data tidak ditemukan", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun setAdapter(list: List<RewardItem>) {
-        adapter = RewardAdapter(list) { reward ->
-            val intent = Intent(this, RewardDetailActivity::class.java)
-            intent.putExtra("REWARD_ID", reward.id)
-            startActivity(intent)
-        }
-        rvReward.adapter = adapter
-    }
-
-    // DITAMBAHKAN: Fungsi Dialog Konfirmasi Logout
     private fun showLogoutConfirmation() {
         AlertDialog.Builder(this)
             .setTitle("Logout")
@@ -203,7 +196,6 @@ class RewardListActivity : AppCompatActivity() {
             .show()
     }
 
-    // DITAMBAHKAN: Fungsi Hapus Sesi dan Kembali ke Login
     private fun logout() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val editor = sharedPref.edit()

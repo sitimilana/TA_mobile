@@ -14,7 +14,6 @@ class RewardAdapter(
 ) : RecyclerView.Adapter<RewardAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
         val tvNama: TextView = view.findViewById(R.id.tvNamaReward)
         val tvDate: TextView = view.findViewById(R.id.tvDateReward)
         val tvScore: TextView = view.findViewById(R.id.tvScoreReward)
@@ -29,12 +28,14 @@ class RewardAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
         val item = list[position]
 
+        // Tetap menggunakan item.nama karena sudah dijembatani oleh @SerializedName("nama_karyawan")
         holder.tvNama.text = item.nama ?: "-"
         holder.tvDate.text = item.tanggal
-        holder.tvScore.text = item.skor.toString()
+
+        // DIUBAH: Menambahkan string "Nilai : " agar format tampilan teks rapi dan konsisten
+        holder.tvScore.text = "${item.skor}"
 
         holder.btnDetail.setOnClickListener {
             onClick(item)

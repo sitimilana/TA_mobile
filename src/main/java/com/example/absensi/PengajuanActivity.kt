@@ -133,13 +133,15 @@ class PengajuanActivity : AppCompatActivity() {
                 when (jenisPengajuan) {
                     "sakit" -> {
                         layoutUpload.visibility = View.VISIBLE
-                        etTanggalSelesai.isEnabled = true // Sakit boleh lebih dari 1 hari
+                        etTanggalSelesai.isEnabled = true
+                        etTanggalSelesai.isFocusable = false
                         tvUploadHint.text = "(Wajib dilampirkan surat dokter/keterangan)"
                         tvUploadHint.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
                     }
                     "izin" -> {
                         layoutUpload.visibility = View.VISIBLE
-                        etTanggalSelesai.isEnabled = true // Izin boleh lebih dari 1 hari
+                        etTanggalSelesai.isEnabled = true
+                        etTanggalSelesai.isFocusable = false
                         tvUploadHint.text = "(Opsional)"
                         tvUploadHint.setTextColor(resources.getColor(R.color.role_text, null))
                     }
@@ -162,15 +164,23 @@ class PengajuanActivity : AppCompatActivity() {
         etTanggalMulai.setOnClickListener {
             showDatePicker(true) { date ->
                 etTanggalMulai.setText(date)
-
-                // JIKA CUTI: Otomatis samakan tanggal selesai agar durasinya pas 1 hari
                 val jenisPengajuan = spinnerKeterangan.selectedItem.toString().lowercase()
                 if (jenisPengajuan == "cuti") {
                     etTanggalSelesai.setText(date)
+                }else{
+                    etTanggalSelesai.setText("")
                 }
             }
         }
-
+        etTanggalSelesai.setOnClickListener {
+            if (etTanggalMulai.text.toString().isEmpty()) {
+                Toast.makeText(this, "Silakan pilih Tanggal Mulai terlebih dahulu", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            showDatePicker(false) { date ->
+                etTanggalSelesai.setText(date)
+            }
+        }
         if (isEditMode) {
             val jenisEdit = intent.getStringExtra(EXTRA_JENIS_CUTI).orEmpty()
             val tanggalMulaiEdit = intent.getStringExtra(EXTRA_TANGGAL_MULAI).orEmpty()
@@ -190,11 +200,15 @@ class PengajuanActivity : AppCompatActivity() {
             when {
                 jenisEdit.contains("sakit", ignoreCase = true) -> {
                     layoutUpload.visibility = View.VISIBLE
+                    etTanggalSelesai.isEnabled = true
+                    etTanggalSelesai.isFocusable = false
                     tvUploadHint.text = "(Wajib dilampirkan surat dokter/keterangan)"
                     tvUploadHint.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
                 }
                 jenisEdit.contains("izin", ignoreCase = true) -> {
                     layoutUpload.visibility = View.VISIBLE
+                    etTanggalSelesai.isEnabled = true
+                    etTanggalSelesai.isFocusable = false
                     tvUploadHint.text = "(Opsional)"
                     tvUploadHint.setTextColor(resources.getColor(R.color.role_text, null))
                 }
