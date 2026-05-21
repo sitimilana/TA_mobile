@@ -13,5 +13,6 @@ data class UserModel(
     @SerializedName("id_user") val idUser: Int,
     @SerializedName("username") val username: String?,
     @SerializedName("nama_lengkap") val namaLengkap: String?,
-    @SerializedName("divisi") val divisi: String? // Tambahkan divisi agar bisa dibaca Android
+    @SerializedName("divisi") val divisi: String?,
+    @SerializedName("tanggal_masuk") val tanggalMasuk: String? // ← Tambahan: untuk filter riwayat
 )

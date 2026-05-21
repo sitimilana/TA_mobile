@@ -9,7 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.absensi.R
 import com.example.absensi.network.CutiItem
 
-class RiwayatPengajuanAdapter(private val listCuti: List<CutiItem>) : RecyclerView.Adapter<RiwayatPengajuanAdapter.ViewHolder>() {
+class RiwayatPengajuanAdapter(
+    private val listCuti: List<CutiItem>,
+    private val onItemClick: (CutiItem) -> Unit
+) : RecyclerView.Adapter<RiwayatPengajuanAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvJenisCuti: TextView = view.findViewById(R.id.tvJenisCuti)
@@ -32,6 +35,8 @@ class RiwayatPengajuanAdapter(private val listCuti: List<CutiItem>) : RecyclerVi
         holder.tvDurasiCuti.text = "${cuti.tanggalMulai} s/d ${cuti.tanggalSelesai}"
         holder.tvAlasan.text = "Alasan: ${cuti.alasan}"
 
+        holder.itemView.setOnClickListener { onItemClick(cuti) }
+
         // Atur warna status sesuai ENUM dari database (approved, rejected, dll)
         when (cuti.status?.lowercase()) {
             "approved" -> {
@@ -50,6 +55,14 @@ class RiwayatPengajuanAdapter(private val listCuti: List<CutiItem>) : RecyclerVi
                 holder.tvStatusBadge.setTextColor(Color.parseColor("#856404")) // Kuning tua
                 holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_pending)
             }
+        }
+
+        val note = cuti.keteranganPimpinan?.trim().orEmpty()
+        if (note.isNotEmpty()) {
+            holder.viewCategoryIndicator.setBackgroundColor(Color.parseColor("#F39C12"))
+            holder.tvAlasan.text = "Alasan: ${cuti.alasan}\nCatatan: $note"
+        } else {
+            holder.viewCategoryIndicator.setBackgroundColor(Color.parseColor("#8F9FC4"))
         }
     }
 

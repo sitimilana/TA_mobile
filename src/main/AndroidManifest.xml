@@ -32,6 +32,7 @@
         <activity android:name=".PresensiActivity" android:exported="false" />
         <activity android:name=".PengajuanActivity" android:exported="false" />
         <activity android:name=".RiwayatPengajuanActivity" android:exported="false" />
+        <activity android:name=".DetailPengajuanActivity" android:exported="false" />
         <activity android:name=".RewardDetailActivity" android:exported="false" />
         <activity android:name=".RiwayatAbsensiActivity" android:exported="false" />
 
@@ -39,7 +40,10 @@
         <activity android:name=".RiwayatPenilaianActivity" android:exported="false" />
         <activity android:name=".RewardListActivity" android:exported="false" />
         <activity android:name=".DetailGajiActivity" android:exported="false" />
-
+        <activity
+            android:name=".DetailPenilaianActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

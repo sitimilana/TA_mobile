@@ -36,57 +36,50 @@
             app:layout_constraintStart_toEndOf="@id/ivSmallTrophy"
             app:layout_constraintTop_toTopOf="parent">
 
+            <!-- Nama -->
+            <TextView
+                android:id="@+id/tvNamaReward"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nama Karyawan"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- Tanggal -->
             <TextView
                 android:id="@+id/tvDateReward"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="25 April 2026"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textColor="@color/role_text"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp" />
 
+            <!-- Nilai -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginTop="6dp">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Jenis Reward : "
+                    android:text="Nilai : "
                     android:textColor="@color/role_text"
                     android:textSize="13sp" />
+
                 <TextView
-                    android:id="@+id/tvJenisReward"
+                    android:id="@+id/tvScoreReward"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Employee of the Month"
+                    android:text="95"
                     android:textColor="@color/black"
                     android:textSize="13sp"
                     android:textStyle="bold"/>
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="6dp">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Alasan : "
-                    android:textColor="@color/role_text"
-                    android:textSize="13sp" />
-                <TextView
-                    android:id="@+id/tvAlasan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Kinerja Luar Biasa"
-                    android:textColor="@color/role_text"
-                    android:textSize="13sp"
-                    android:layout_marginStart="4dp"/>
-            </LinearLayout>
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -105,3 +98,4 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
+

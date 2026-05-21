@@ -14,23 +14,31 @@ class RewardAdapter(
 ) : RecyclerView.Adapter<RewardAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+        val tvNama: TextView = view.findViewById(R.id.tvNamaReward)
         val tvDate: TextView = view.findViewById(R.id.tvDateReward)
-        val tvJenis: TextView = view.findViewById(R.id.tvJenisReward)
-        val tvAlasan: TextView = view.findViewById(R.id.tvAlasan)
+        val tvScore: TextView = view.findViewById(R.id.tvScoreReward)
         val btnDetail: View = view.findViewById(R.id.btnDetail)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_reward, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_reward, parent, false)
+
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
         val item = list[position]
+
+        holder.tvNama.text = item.nama ?: "-"
         holder.tvDate.text = item.tanggal
-        holder.tvJenis.text = item.jenis
-        holder.tvAlasan.text = item.alasan
-        holder.btnDetail.setOnClickListener { onClick(item) }
+        holder.tvScore.text = item.skor.toString()
+
+        holder.btnDetail.setOnClickListener {
+            onClick(item)
+        }
     }
 
     override fun getItemCount(): Int = list.size

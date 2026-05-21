@@ -1,8 +1,11 @@
 package com.example.absensi
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.RewardItem
@@ -14,10 +17,9 @@ import retrofit2.Response
 class RewardDetailActivity : AppCompatActivity() {
 
     private lateinit var tvDetailName: TextView
-    private lateinit var tvDetailType: TextView
+    private lateinit var tvDetailPeriode: TextView // DITAMBAHKAN
     private lateinit var tvDetailDate: TextView
     private lateinit var tvDetailScore: TextView
-    private lateinit var tvDetailReason: TextView
     private lateinit var tvWelcomeName: TextView
     private lateinit var tvRole: TextView
 
@@ -25,16 +27,21 @@ class RewardDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reward_detail)
 
-        // 1. Inisialisasi Navigasi Bawah
+        // 1. Inisialisasi Navigasi Bawah dan Header
         NavigationUtils.setupBottomNav(this)
         NavigationUtils.setupHeaderWithUserData(this)
 
+        // Hubungkan tombol Logout via Header
+        val btnLogout: ImageButton = findViewById(R.id.btnLogout)
+        btnLogout.setOnClickListener {
+            showLogoutConfirmation()
+        }
+
         // 2. Inisialisasi View
         tvDetailName = findViewById(R.id.tvDetailRewardName)
-        tvDetailType = findViewById(R.id.tvDetailRewardType)
+        tvDetailPeriode = findViewById(R.id.tvDetailRewardPeriode) // DITAMBAHKAN
         tvDetailDate = findViewById(R.id.tvDetailRewardDate)
         tvDetailScore = findViewById(R.id.tvDetailRewardScore)
-        tvDetailReason = findViewById(R.id.tvDetailRewardReason)
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
         tvRole = findViewById(R.id.tvRole)
 
@@ -52,7 +59,6 @@ class RewardDetailActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val token = "Bearer ${sharedPref.getString("TOKEN", "")}"
 
-        // Mengambil semua data reward lalu mencari yang ID-nya cocok
         ApiConfig.getApiService().getRewards(token).enqueue(object : Callback<RewardResponse> {
             override fun onResponse(call: Call<RewardResponse>, response: Response<RewardResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
@@ -75,9 +81,37 @@ class RewardDetailActivity : AppCompatActivity() {
 
     private fun displayReward(reward: RewardItem) {
         tvDetailName.text = reward.nama
-        tvDetailType.text = reward.jenis
         tvDetailDate.text = reward.tanggal
         tvDetailScore.text = reward.skor.toString()
-        tvDetailReason.text = reward.alasan
+
+        // DITAMBAHKAN: Mengambil info periode dari kolom keterangan database
+        tvDetailPeriode.text = reward.alasan // Menggunakan properti alasan/keterangan yang menampung string DB tersebut
+    }
+
+    // Fungsi Dialog Konfirmasi Logout
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Apakah Anda yakin ingin keluar?")
+            .setPositiveButton("Ya, Logout") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    // Fungsi Hapus Sesi dan Kembali ke Login
+    private fun logout() {
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.clear()
+        editor.apply()
+
+        Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show()
+
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

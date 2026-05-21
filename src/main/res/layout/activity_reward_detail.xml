@@ -70,23 +70,18 @@
                 </LinearLayout>
 
                 <LinearLayout style="@style/SalaryDetailItem">
-                    <TextView style="@style/SalaryLabel" android:text="Jenis Reward" />
-                    <TextView android:id="@+id/tvDetailRewardType" style="@style/SalaryValue" android:text="-" />
+                    <TextView style="@style/SalaryLabel" android:text="Periode Reward" />
+                    <TextView android:id="@+id/tvDetailRewardPeriode" style="@style/SalaryValue" android:text="-" android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout style="@style/SalaryDetailItem">
-                    <TextView style="@style/SalaryLabel" android:text="Tanggal" />
+                    <TextView style="@style/SalaryLabel" android:text="Tanggal Pemberian" />
                     <TextView android:id="@+id/tvDetailRewardDate" style="@style/SalaryValue" android:text="-" />
                 </LinearLayout>
 
                 <LinearLayout style="@style/SalaryDetailItem">
                     <TextView style="@style/SalaryLabel" android:text="Nilai Kinerja" />
                     <TextView android:id="@+id/tvDetailRewardScore" style="@style/SalaryValue" android:text="0" android:textColor="@color/avatar_blue" android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout style="@style/SalaryDetailItem" android:layout_marginTop="8dp">
-                    <TextView style="@style/SalaryLabel" android:text="Alasan" android:textColor="@color/black" />
-                    <TextView android:id="@+id/tvDetailRewardReason" style="@style/SalaryValue" android:text="-" android:textColor="@color/black" android:gravity="end" />
                 </LinearLayout>
 
             </LinearLayout>

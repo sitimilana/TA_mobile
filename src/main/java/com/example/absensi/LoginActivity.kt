@@ -67,6 +67,7 @@ class LoginActivity : AppCompatActivity() {
                             editor.putString("ID_USER", userData?.idUser?.toString() ?: "")
                             editor.putString("USERNAME", userData?.username ?: "")
                             editor.putString("NAMA_LENGKAP", userData?.namaLengkap ?: "")
+                            editor.putString("TANGGAL_MASUK", userData?.tanggalMasuk ?: "")
 
                             // Cek apakah divisi kosong/null dari Laravel. Jika iya, beri teks sementara
                             val divisi = userData?.divisi

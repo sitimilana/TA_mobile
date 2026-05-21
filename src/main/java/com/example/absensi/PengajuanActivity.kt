@@ -6,9 +6,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.*
+import android.widget.ImageButton
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.absensi.network.ApiConfig
+import com.example.absensi.network.ApiMessageResponse
 import com.example.absensi.network.LoginResponse
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -26,6 +29,18 @@ import java.util.*
 
 class PengajuanActivity : AppCompatActivity() {
 
+    companion object {
+        const val EXTRA_MODE = "extra_mode"
+        const val MODE_CREATE = "create"
+        const val MODE_EDIT = "edit"
+        const val EXTRA_CUTI_ID = "extra_cuti_id"
+        const val EXTRA_JENIS_CUTI = "extra_jenis_cuti"
+        const val EXTRA_TANGGAL_MULAI = "extra_tanggal_mulai"
+        const val EXTRA_TANGGAL_SELESAI = "extra_tanggal_selesai"
+        const val EXTRA_ALASAN = "extra_alasan"
+        const val EXTRA_KETERANGAN_PIMPINAN = "extra_keterangan_pimpinan"
+    }
+
     private lateinit var etNama: TextInputEditText
     private lateinit var etDivisi: TextInputEditText
     private lateinit var etTanggalMulai: TextInputEditText
@@ -36,6 +51,9 @@ class PengajuanActivity : AppCompatActivity() {
     private lateinit var btnAjukan: MaterialButton
 
     private lateinit var btnRiwayat: MaterialButton
+    private var isEditMode = false
+    private var editCutiId: Int = -1
+    private var isInitializingForm = false
 
     // View Tambahan untuk Upload
     private lateinit var layoutUpload: LinearLayout
@@ -69,7 +87,12 @@ class PengajuanActivity : AppCompatActivity() {
         tvWelcomeName = findViewById(R.id.tvWelcomeName)
         tvRole = findViewById(R.id.tvRole)
 
-        // ...existing code...
+        // Fitur Logout via Header
+        val btnLogout: ImageButton = findViewById(R.id.btnLogout)
+        btnLogout.setOnClickListener {
+            showLogoutConfirmation()
+        }
+
         etNama = findViewById(R.id.etNama)
         etDivisi = findViewById(R.id.etDivisi)
         etTanggalMulai = findViewById(R.id.etTanggalMulai)
@@ -89,6 +112,8 @@ class PengajuanActivity : AppCompatActivity() {
         val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan")
         val divisi = sharedPref.getString("DIVISI", "Belum ada divisi")
 
+        isEditMode = intent.getStringExtra(EXTRA_MODE) == MODE_EDIT
+        editCutiId = intent.getIntExtra(EXTRA_CUTI_ID, -1)
 
         etNama.setText(namaLengkap)
         etDivisi.setText(divisi)
@@ -100,24 +125,28 @@ class PengajuanActivity : AppCompatActivity() {
 
         spinnerKeterangan.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val jenisPengajuan = listKeterangan[position].lowercase()
+                if (isInitializingForm) return
 
-                when {
-                    jenisPengajuan == "sakit" -> {
+                val jenisPengajuan = listKeterangan[position].lowercase()
+                etTanggalMulai.setText("")
+                etTanggalSelesai.setText("")
+                when (jenisPengajuan) {
+                    "sakit" -> {
                         layoutUpload.visibility = View.VISIBLE
+                        etTanggalSelesai.isEnabled = true // Sakit boleh lebih dari 1 hari
                         tvUploadHint.text = "(Wajib dilampirkan surat dokter/keterangan)"
                         tvUploadHint.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
                     }
-                    jenisPengajuan == "izin" -> {
+                    "izin" -> {
                         layoutUpload.visibility = View.VISIBLE
+                        etTanggalSelesai.isEnabled = true // Izin boleh lebih dari 1 hari
                         tvUploadHint.text = "(Opsional)"
                         tvUploadHint.setTextColor(resources.getColor(R.color.role_text, null))
                     }
-                    jenisPengajuan == "cuti" -> {
-                        // Untuk Cuti, sembunyikan kotak upload
+                    "cuti" -> {
                         layoutUpload.visibility = View.GONE
-
-                        // Bersihkan file jika ada
+                        // Kunci tanggal selesai agar diisi otomatis lewat logika tanggal mulai
+                        etTanggalSelesai.isEnabled = false
                         imageFile = null
                         selectedImageUri = null
                         btnChooseFile.text = "Pilih File"
@@ -125,17 +154,63 @@ class PengajuanActivity : AppCompatActivity() {
                         tvFileName.setTextColor(resources.getColor(R.color.role_text, null))
                     }
                 }
-
-                // Reset tanggal agar user memilih ulang sesuai aturan validasi kalender
-                etTanggalMulai.setText("")
-                etTanggalSelesai.setText("")
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
         // --- 4. Setup Kalender ---
-        etTanggalMulai.setOnClickListener { showDatePicker(true) { date -> etTanggalMulai.setText(date) } }
-        etTanggalSelesai.setOnClickListener { showDatePicker(false) { date -> etTanggalSelesai.setText(date) } }
+        etTanggalMulai.setOnClickListener {
+            showDatePicker(true) { date ->
+                etTanggalMulai.setText(date)
+
+                // JIKA CUTI: Otomatis samakan tanggal selesai agar durasinya pas 1 hari
+                val jenisPengajuan = spinnerKeterangan.selectedItem.toString().lowercase()
+                if (jenisPengajuan == "cuti") {
+                    etTanggalSelesai.setText(date)
+                }
+            }
+        }
+
+        if (isEditMode) {
+            val jenisEdit = intent.getStringExtra(EXTRA_JENIS_CUTI).orEmpty()
+            val tanggalMulaiEdit = intent.getStringExtra(EXTRA_TANGGAL_MULAI).orEmpty()
+            val tanggalSelesaiEdit = intent.getStringExtra(EXTRA_TANGGAL_SELESAI).orEmpty()
+            val alasanEdit = intent.getStringExtra(EXTRA_ALASAN).orEmpty()
+
+            isInitializingForm = true
+            when {
+                jenisEdit.contains("sakit", ignoreCase = true) -> spinnerKeterangan.setSelection(2)
+                jenisEdit.contains("izin", ignoreCase = true) -> spinnerKeterangan.setSelection(1)
+                else -> spinnerKeterangan.setSelection(0)
+            }
+            etTanggalMulai.setText(tanggalMulaiEdit)
+            etTanggalSelesai.setText(tanggalSelesaiEdit)
+            etAlasanCuti.setText(alasanEdit)
+
+            when {
+                jenisEdit.contains("sakit", ignoreCase = true) -> {
+                    layoutUpload.visibility = View.VISIBLE
+                    tvUploadHint.text = "(Wajib dilampirkan surat dokter/keterangan)"
+                    tvUploadHint.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                }
+                jenisEdit.contains("izin", ignoreCase = true) -> {
+                    layoutUpload.visibility = View.VISIBLE
+                    tvUploadHint.text = "(Opsional)"
+                    tvUploadHint.setTextColor(resources.getColor(R.color.role_text, null))
+                }
+                else -> {
+                    layoutUpload.visibility = View.GONE
+                    imageFile = null
+                    selectedImageUri = null
+                    btnChooseFile.text = "Pilih File"
+                    tvFileName.text = "Belum ada file yang dipilih"
+                    tvFileName.setTextColor(resources.getColor(R.color.role_text, null))
+                }
+            }
+
+            btnAjukan.text = "Update Pengajuan"
+            isInitializingForm = false
+        }
 
         // --- 5. Setup Tombol ---
         btnChooseFile.setOnClickListener { pickImageLauncher.launch("image/*") }
@@ -220,6 +295,7 @@ class PengajuanActivity : AppCompatActivity() {
         val reqTglSelesai = tglSelesai.toRequestBody("text/plain".toMediaTypeOrNull())
         val reqJenisCuti = jenisPengajuan.toRequestBody("text/plain".toMediaTypeOrNull())
         val reqAlasan = alasan.toRequestBody("text/plain".toMediaTypeOrNull())
+        val reqMethodOverride = "PUT".toRequestBody("text/plain".toMediaTypeOrNull())
 
         var fotoMultipart: MultipartBody.Part? = null
         if (imageFile != null) {
@@ -228,39 +304,108 @@ class PengajuanActivity : AppCompatActivity() {
         }
 
         btnAjukan.isEnabled = false
-        btnAjukan.text = "Mengirim..."
+        btnAjukan.text = if (isEditMode) "Mengupdate..." else "Mengirim..."
 
-        ApiConfig.getApiService().submitCuti(bearerToken, reqTglMulai, reqTglSelesai, reqJenisCuti, reqAlasan, fotoMultipart)
-            .enqueue(object : Callback<LoginResponse> {
-                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+        if (isEditMode && editCutiId > 0) {
+            ApiConfig.getApiService().updateCuti(
+                bearerToken,
+                editCutiId,
+                reqMethodOverride,
+                reqTglMulai,
+                reqTglSelesai,
+                reqJenisCuti,
+                reqAlasan,
+                fotoMultipart
+            ).enqueue(object : Callback<ApiMessageResponse> {
+                override fun onResponse(call: Call<ApiMessageResponse>, response: Response<ApiMessageResponse>) {
                     btnAjukan.isEnabled = true
-                    btnAjukan.text = "Ajukan Sekarang"
+                    btnAjukan.text = "Update Pengajuan"
 
-                    if (response.isSuccessful && response.code() == 201) {
-                        Toast.makeText(this@PengajuanActivity, "Pengajuan berhasil dikirim!", Toast.LENGTH_LONG).show()
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@PengajuanActivity, response.body()?.message ?: "Pengajuan berhasil diperbarui!", Toast.LENGTH_LONG).show()
                         startActivity(Intent(this@PengajuanActivity, RiwayatPengajuanActivity::class.java))
                         finish()
                     } else {
                         try {
                             val errorString = response.errorBody()?.string()
-                            if (errorString != null) {
-                                val jsonObject = JSONObject(errorString)
-                                val pesanError = jsonObject.getString("message")
-                                Toast.makeText(this@PengajuanActivity, pesanError, Toast.LENGTH_LONG).show()
+                            val pesanError = if (!errorString.isNullOrEmpty()) {
+                                JSONObject(errorString).optString("message", "Gagal memproses update.")
                             } else {
-                                Toast.makeText(this@PengajuanActivity, "Gagal. Terjadi kesalahan server.", Toast.LENGTH_SHORT).show()
+                                "Gagal. Terjadi kesalahan server."
                             }
+                            Toast.makeText(this@PengajuanActivity, pesanError, Toast.LENGTH_LONG).show()
                         } catch (e: Exception) {
                             Toast.makeText(this@PengajuanActivity, "Gagal memproses respons: ${response.code()}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
 
-                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                override fun onFailure(call: Call<ApiMessageResponse>, t: Throwable) {
                     btnAjukan.isEnabled = true
-                    btnAjukan.text = "Ajukan Sekarang"
+                    btnAjukan.text = "Update Pengajuan"
                     Toast.makeText(this@PengajuanActivity, "Koneksi Error: ${t.message}", Toast.LENGTH_LONG).show()
                 }
             })
+        } else {
+            ApiConfig.getApiService().submitCuti(bearerToken, reqTglMulai, reqTglSelesai, reqJenisCuti, reqAlasan, fotoMultipart)
+                .enqueue(object : Callback<LoginResponse> {
+                    override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                        btnAjukan.isEnabled = true
+                        btnAjukan.text = "Ajukan Sekarang"
+
+                        if (response.isSuccessful && response.code() == 201) {
+                            Toast.makeText(this@PengajuanActivity, "Pengajuan berhasil dikirim!", Toast.LENGTH_LONG).show()
+                            startActivity(Intent(this@PengajuanActivity, RiwayatPengajuanActivity::class.java))
+                            finish()
+                        } else {
+                            try {
+                                val errorString = response.errorBody()?.string()
+                                if (errorString != null) {
+                                    val jsonObject = JSONObject(errorString)
+                                    val pesanError = jsonObject.getString("message")
+                                    Toast.makeText(this@PengajuanActivity, pesanError, Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(this@PengajuanActivity, "Gagal. Terjadi kesalahan server.", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(this@PengajuanActivity, "Gagal memproses respons: ${response.code()}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+
+                    override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                        btnAjukan.isEnabled = true
+                        btnAjukan.text = "Ajukan Sekarang"
+                        Toast.makeText(this@PengajuanActivity, "Koneksi Error: ${t.message}", Toast.LENGTH_LONG).show()
+                    }
+                })
+        }
+    }
+
+    // Fungsi Konfirmasi Logout dengan Dialog
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Apakah Anda yakin ingin keluar?")
+            .setPositiveButton("Ya, Logout") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    // Fungsi Eksekusi Membersihkan Sesi dan Kembali ke Login
+    private fun logout() {
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.clear()
+        editor.apply()
+
+        Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show()
+
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

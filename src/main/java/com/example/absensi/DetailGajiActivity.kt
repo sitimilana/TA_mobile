@@ -1,8 +1,11 @@
 package com.example.absensi
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.SalaryDetailResponse
@@ -21,6 +24,12 @@ class DetailGajiActivity : AppCompatActivity() {
         // Atur Bottom Nav dan Header (Jika digunakan di halaman ini)
         NavigationUtils.setupBottomNav(this)
         NavigationUtils.setupHeaderWithUserData(this)
+
+        // Fitur Logout
+        val btnLogout: ImageButton = findViewById(R.id.btnLogout)
+        btnLogout.setOnClickListener {
+            showLogoutConfirmation()
+        }
 
         // Ambil ID Gaji yang dikirim dari SlipGajiAdapter
         val idGaji = intent.getIntExtra("ID_GAJI", -1)
@@ -97,5 +106,32 @@ class DetailGajiActivity : AppCompatActivity() {
         if (number == null) return "Rp 0"
         val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         return formatRupiah.format(number).replace("Rp", "Rp ")
+    }
+
+    // Fungsi Konfirmasi Logout
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Apakah Anda yakin ingin keluar?")
+            .setPositiveButton("Ya, Logout") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    // Fungsi Eksekusi Logout
+    private fun logout() {
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.clear()
+        editor.apply()
+
+        Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show()
+
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

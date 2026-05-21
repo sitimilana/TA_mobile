@@ -1,13 +1,16 @@
 package com.example.absensi
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,6 +38,12 @@ class SlipGajiActivity : AppCompatActivity() {
         setContentView(R.layout.activity_slip_gaji)
         NavigationUtils.setupBottomNav(this)
         NavigationUtils.setupHeaderWithUserData(this)
+
+        // DITAMBAHKAN: Hubungkan tombol Logout via Header
+        val btnLogout: ImageButton = findViewById(R.id.btnLogout)
+        btnLogout.setOnClickListener {
+            showLogoutConfirmation()
+        }
 
         rvSlipGaji = findViewById(R.id.rvSalarySlips)
         rvSlipGaji.layoutManager = LinearLayoutManager(this)
@@ -86,7 +95,7 @@ class SlipGajiActivity : AppCompatActivity() {
                 val periode = it.periode?.lowercase() ?: ""
                 val bulanStr = getBulanName(it.bulan ?: 0).lowercase()
                 val tahunStr = (it.tahun ?: "").toString()
-                
+
                 periode.contains(query) || bulanStr.contains(query) || tahunStr.contains(query)
             }
         }
@@ -147,5 +156,32 @@ class SlipGajiActivity : AppCompatActivity() {
                     Toast.makeText(this@SlipGajiActivity, "Koneksi Error: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
+    }
+
+    // DITAMBAHKAN: Fungsi Dialog Konfirmasi Logout
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Apakah Anda yakin ingin keluar?")
+            .setPositiveButton("Ya, Logout") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    // DITAMBAHKAN: Fungsi Hapus Sesi dan Kembali ke Login
+    private fun logout() {
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.clear()
+        editor.apply()
+
+        Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show()
+
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

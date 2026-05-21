@@ -4,11 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +35,9 @@ class RewardListActivity : AppCompatActivity() {
 
     private lateinit var adapter: RewardAdapter
 
+    // Banner Karyawan Terbaik
+    private lateinit var bannerTopPerformer: LinearLayout
+
     // Menyimpan data asli kandidat reward agar bisa difilter secara lokal
     private var allRewards: List<RewardItem> = listOf()
 
@@ -42,12 +49,19 @@ class RewardListActivity : AppCompatActivity() {
         NavigationUtils.setupBottomNav(this)
         NavigationUtils.setupHeaderWithUserData(this)
 
+        // DITAMBAHKAN: Hubungkan tombol Logout via Header
+        val btnLogout: ImageButton = findViewById(R.id.btnLogout)
+        btnLogout.setOnClickListener {
+            showLogoutConfirmation()
+        }
+
         // Inisialisasi View
         rvReward = findViewById(R.id.rvRewardList)
         etSearch = findViewById(R.id.etSearch)
         spinnerBulan = findViewById(R.id.spinnerBulan)
         spinnerTahun = findViewById(R.id.spinnerTahun)
         btnFilter = findViewById(R.id.btnFilter)
+        bannerTopPerformer = findViewById(R.id.bannerTopPerformer)
 
         rvReward.layoutManager = LinearLayoutManager(this)
 
@@ -57,7 +71,6 @@ class RewardListActivity : AppCompatActivity() {
     }
 
     private fun setupSpinners() {
-        // Setup Spinner Bulan
         val listBulan = arrayOf(
             "Semua Bulan", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -66,7 +79,6 @@ class RewardListActivity : AppCompatActivity() {
         bulanAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerBulan.adapter = bulanAdapter
 
-        // Setup Spinner Tahun (Dinamis dari tahun 2023 sampai tahun saat ini)
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         val listTahun = mutableListOf("Semua Tahun")
         for (i in 2023..currentYear) {
@@ -78,7 +90,6 @@ class RewardListActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        // Listener Pencarian Real-time
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -87,7 +98,6 @@ class RewardListActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Listener Tombol Filter
         btnFilter.setOnClickListener {
             applyFilter()
         }
@@ -102,19 +112,29 @@ class RewardListActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val rawData = response.body()?.data ?: emptyList()
 
-                    // --- IMPLEMENTASI ALUR DIAGRAM AKTIVITAS ---
-                    // Logika bawaan Anda: Skor >= 85 & Tidak Ada Alpha
-                    val candidates = rawData.filter { it.skor >= 85 && it.alpha == 0 }
+                    val candidates = rawData.filter { it.skor >= 85 }
 
-                    if (candidates.isEmpty()) {
-                        Toast.makeText(this@RewardListActivity, "Tidak ada kandidat reward", Toast.LENGTH_SHORT).show()
+
+                    // --- LOGIKA MUNCULKAN BANNER "SELAMAT" JIKA DAPAT REWARD BULAN INI ---
+                    val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
+                    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+
+                    val isTopThisMonth = candidates.any { item ->
+                        val parts = item.tanggal.split("-")
+                        val itemYear = parts.getOrNull(0)?.toIntOrNull() ?: 0
+                        val itemMonth = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                        itemYear == currentYear && itemMonth == currentMonth
                     }
 
-                    // Simpan data kandidat ke variabel global untuk proses filter
-                    allRewards = candidates
+                    if (isTopThisMonth) {
+                        bannerTopPerformer.visibility = View.VISIBLE
+                    } else {
+                        bannerTopPerformer.visibility = View.GONE
+                    }
 
-                    // Tampilkan data utuh pertama kali
+                    allRewards = candidates
                     setAdapter(allRewards)
+
                 } else {
                     Toast.makeText(this@RewardListActivity, "Gagal memuat data", Toast.LENGTH_SHORT).show()
                 }
@@ -128,41 +148,33 @@ class RewardListActivity : AppCompatActivity() {
 
     private fun applyFilter() {
         val keyword = etSearch.text.toString().trim().lowercase()
-
-        // Dapatkan value dari Spinner
         val selectedBulanStr = spinnerBulan.selectedItem.toString()
         val selectedTahunStr = spinnerTahun.selectedItem.toString()
 
-        // Konversi nama bulan menjadi angka (contoh: "Januari" -> 1)
         val bulanAngka = when (selectedBulanStr) {
             "Januari" -> 1; "Februari" -> 2; "Maret" -> 3; "April" -> 4
             "Mei" -> 5; "Juni" -> 6; "Juli" -> 7; "Agustus" -> 8
             "September" -> 9; "Oktober" -> 10; "November" -> 11; "Desember" -> 12
-            else -> 0 // "Semua Bulan"
+            else -> 0
         }
 
         val filteredList = allRewards.filter { item ->
-            // Pencarian berdasarkan nama, jenis reward, atau alasan
-            val matchKeyword = (item.nama.lowercase().contains(keyword)) ||
-                    (item.jenis.lowercase().contains(keyword)) ||
-                    (item.alasan.lowercase().contains(keyword)) ||
-                    (item.tanggal.lowercase().contains(keyword))
+            val matchKeyword =
+                (item.nama?.lowercase()?.contains(keyword) == true) ||
+                        (item.alasan.lowercase().contains(keyword)) ||
+                        (item.tanggal.lowercase().contains(keyword))
 
-            // Ekstrak Tahun dan Bulan dari format string tanggal (misal: "2024-05-14")
+
             val dateParts = item.tanggal.split("-")
             val itemYear = dateParts.getOrNull(0) ?: ""
-            // Gunakan toIntOrNull agar "05" terbaca menjadi angka 5
             val itemMonth = dateParts.getOrNull(1)?.toIntOrNull() ?: 0
 
-            // Cek kecocokan bulan & tahun dari spinner
             val matchBulan = if (selectedBulanStr == "Semua Bulan") true else itemMonth == bulanAngka
             val matchTahun = if (selectedTahunStr == "Semua Tahun") true else itemYear == selectedTahunStr
 
-            // Gabungkan kondisi
             matchKeyword && matchBulan && matchTahun
         }
 
-        // Terapkan hasil filter ke adapter
         setAdapter(filteredList)
 
         if (filteredList.isEmpty() && allRewards.isNotEmpty()) {
@@ -170,7 +182,6 @@ class RewardListActivity : AppCompatActivity() {
         }
     }
 
-    // Fungsi bantuan untuk set/reset adapter beserta aksi kliknya
     private fun setAdapter(list: List<RewardItem>) {
         adapter = RewardAdapter(list) { reward ->
             val intent = Intent(this, RewardDetailActivity::class.java)
@@ -178,5 +189,32 @@ class RewardListActivity : AppCompatActivity() {
             startActivity(intent)
         }
         rvReward.adapter = adapter
+    }
+
+    // DITAMBAHKAN: Fungsi Dialog Konfirmasi Logout
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Apakah Anda yakin ingin keluar?")
+            .setPositiveButton("Ya, Logout") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    // DITAMBAHKAN: Fungsi Hapus Sesi dan Kembali ke Login
+    private fun logout() {
+        val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.clear()
+        editor.apply()
+
+        Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show()
+
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }
