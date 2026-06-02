@@ -177,6 +177,7 @@ class RiwayatPengajuanActivity : AppCompatActivity() {
         intent.putExtra(DetailPengajuanActivity.EXTRA_TANGGAL_PENGAJUAN, item.tanggalPengajuan.orEmpty())
         intent.putExtra(DetailPengajuanActivity.EXTRA_SISA_CUTI, currentSisaCuti)
         intent.putExtra(DetailPengajuanActivity.EXTRA_KETERANGAN_PIMPINAN, item.keteranganPimpinan.orEmpty())
+        intent.putExtra(DetailPengajuanActivity.EXTRA_BERKAS_BUKTI, item.berkasBukti.orEmpty())
         startActivity(intent)
     }
 

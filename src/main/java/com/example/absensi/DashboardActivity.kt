@@ -15,7 +15,7 @@ import com.google.android.material.card.MaterialCardView
 
 import com.example.absensi.network.ApiConfig
 import com.example.absensi.network.RewardItem
-import com.example.absensi.network.DashboardRewardResponse // DIUBAH: Menggunakan response dashboard baru
+import com.example.absensi.network.DashboardRewardResponse
 import com.example.absensi.network.RiwayatResponse
 import com.example.absensi.network.PenilaianResponse
 import com.example.absensi.network.PenilaianData
@@ -160,7 +160,6 @@ class DashboardActivity : AppCompatActivity() {
         })
     }
 
-    // DIUBAH: Menggunakan getDashboardReward dan DashboardRewardResponse
     private fun fetchMyRewardData() {
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)
         val token = "Bearer ${sharedPref.getString("TOKEN", "")}"
@@ -169,56 +168,76 @@ class DashboardActivity : AppCompatActivity() {
             override fun onResponse(call: Call<DashboardRewardResponse>, response: Response<DashboardRewardResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val dashboardData = response.body()?.data
-                    val rewardList = dashboardData?.rewardHistory ?: emptyList() // Mengambil history dengan properti camelCase baru
+                    val rewardList = dashboardData?.rewardHistory ?: emptyList()
+
+                    // DEBUG LOG: Cek di Logcat (Filter ketik: CEK_REWARD)
+                    android.util.Log.d("CEK_REWARD", "Jumlah Semua Reward: ${rewardList.size}")
+
+                    if (dashboardData?.latestRecentReward != null) {
+                        android.util.Log.d("CEK_REWARD", "Ada Reward Baru 7 Hari Terakhir: ${dashboardData.latestRecentReward.tanggal}")
+                    } else {
+                        android.util.Log.d("CEK_REWARD", "TIDAK ADA Reward dalam 7 hari terakhir dari backend.")
+                    }
+
                     checkMyReward(rewardList)
                 }
             }
-            override fun onFailure(call: Call<DashboardRewardResponse>, t: Throwable) {}
+            override fun onFailure(call: Call<DashboardRewardResponse>, t: Throwable) {
+                android.util.Log.e("CEK_REWARD", "Error Fetch: ${t.message}")
+            }
         })
     }
 
     private fun checkMyReward(listReward: List<RewardItem>) {
         if (listReward.isEmpty()) {
             layoutBannerReward.visibility = View.GONE
+            android.util.Log.d("CEK_REWARD", "List Kosong -> Banner GONE")
             return
         }
 
-        val latestReward = listReward.maxByOrNull { it.tanggal }
+        // 1. Ambil reward terbaru berdasarkan tanggal
+        val latestRecent = listReward.maxByOrNull { it.tanggal ?: "" }
 
-        if (latestReward != null) {
+        if (latestRecent != null && !latestRecent.tanggal.isNullOrEmpty()) {
             try {
-                val parts = latestReward.tanggal.split("-")
-                if (parts.size >= 3) {
-                    val inputYear = parts[0].toInt()
-                    val inputMonth = parts[1].toInt()
+                // 2. Amankan parsing tanggal dengan memotong string (ambil YYYY-MM-DD saja)
+                val cleanDateString = if (latestRecent.tanggal.length >= 10) {
+                    latestRecent.tanggal.substring(0, 10)
+                } else {
+                    latestRecent.tanggal
+                }
 
-                    var rewardMonth = inputMonth - 1
-                    var rewardYear = inputYear
-                    if (rewardMonth <= 0) {
-                        rewardMonth = 12
-                        rewardYear -= 1
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val currentDate = Date()
+                val rewardDate = sdf.parse(cleanDateString)
+
+                if (rewardDate != null) {
+                    // 3. Gunakan Math.abs() agar selisih waktu tidak pernah bernilai minus
+                    val diffInMillis = Math.abs(currentDate.time - rewardDate.time)
+                    val diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMillis)
+
+                    android.util.Log.d("CEK_REWARD", "Reward Terakhir: $cleanDateString. Selisih hari: $diffInDays")
+
+                    // 4. Jika jaraknya masih dalam 7 hari (termasuk hari H)
+                    if (diffInDays <= 7) {
+                        layoutBannerReward.visibility = View.VISIBLE
+                        android.util.Log.d("CEK_REWARD", "Masuk rentang 7 hari -> Banner VISIBLE")
+
+                        val namaBulanArray = arrayOf("", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember")
+
+                        // Amankan index array agar tidak OutOfBounds
+                        val bulanTeks = if (latestRecent.bulan in 1..12) namaBulanArray[latestRecent.bulan] else ""
+                        val tahunTeks = latestRecent.tahun
+
+                        val tvPesanReward = layoutBannerReward.findViewById<TextView>(R.id.tvPesanReward)
+                        tvPesanReward.text = "Anda terpilih sebagai Karyawan Terbaik bulan $bulanTeks $tahunTeks!"
+                    } else {
+                        // Lebih dari 7 hari, sembunyikan banner
+                        layoutBannerReward.visibility = View.GONE
+                        android.util.Log.d("CEK_REWARD", "Lebih dari 7 hari -> Banner GONE")
                     }
-
-                    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    val rewardDate = sdf.parse(latestReward.tanggal)
-                    val currentDate = Date()
-
-                    if (rewardDate != null) {
-                        val diffInMillis = currentDate.time - rewardDate.time
-                        val diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMillis)
-
-                        if (diffInDays <= 7) {
-                            layoutBannerReward.visibility = View.VISIBLE
-
-                            val namaBulanArray = arrayOf("", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember")
-                            val bulanTeks = if (rewardMonth in 1..12) namaBulanArray[rewardMonth] else ""
-
-                            val tvPesanReward = layoutBannerReward.getChildAt(1) as TextView
-                            tvPesanReward.text = "Anda terpilih sebagai Karyawan Terbaik bulan $bulanTeks $rewardYear!"
-                        } else {
-                            layoutBannerReward.visibility = View.GONE
-                        }
-                    }
+                } else {
+                    layoutBannerReward.visibility = View.GONE
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -3,10 +3,12 @@ package com.example.absensi
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -28,11 +30,13 @@ class DetailPengajuanActivity : AppCompatActivity() {
         const val EXTRA_TANGGAL_PENGAJUAN = "extra_tanggal_pengajuan"
         const val EXTRA_SISA_CUTI = "extra_sisa_cuti"
         const val EXTRA_KETERANGAN_PIMPINAN = "extra_keterangan_pimpinan"
+        const val EXTRA_BERKAS_BUKTI = "extra_berkas_bukti"
     }
 
     private var cutiId: Int = -1
     private var status: String = ""
     private var keteranganPimpinan: String = ""
+    private var berkasBukti: String = ""
 
     private lateinit var tvJenisCuti: TextView
     private lateinit var tvTanggalPengajuan: TextView
@@ -41,6 +45,9 @@ class DetailPengajuanActivity : AppCompatActivity() {
     private lateinit var tvStatusBadge: TextView
     private lateinit var tvSisaCuti: TextView
     private lateinit var tvCatatanPimpinan: TextView
+    private lateinit var layoutBerkasBukti: LinearLayout
+    private lateinit var tvBerkasBuktiLabel: TextView
+    private lateinit var btnBukaBerkas: Button
     private lateinit var btnEditPengajuan: Button
     private lateinit var btnHapusPengajuan: Button
 
@@ -62,6 +69,7 @@ class DetailPengajuanActivity : AppCompatActivity() {
         val tanggalPengajuan = intent.getStringExtra(EXTRA_TANGGAL_PENGAJUAN).orEmpty()
         val sisaCuti = intent.getIntExtra(EXTRA_SISA_CUTI, 0)
         keteranganPimpinan = intent.getStringExtra(EXTRA_KETERANGAN_PIMPINAN).orEmpty()
+        berkasBukti = intent.getStringExtra(EXTRA_BERKAS_BUKTI).orEmpty()
 
         tvJenisCuti = findViewById(R.id.tvJenisCuti)
         tvTanggalPengajuan = findViewById(R.id.tvTanggalPengajuan)
@@ -70,6 +78,9 @@ class DetailPengajuanActivity : AppCompatActivity() {
         tvStatusBadge = findViewById(R.id.tvStatusBadge)
         tvSisaCuti = findViewById(R.id.tvSisaCuti)
         tvCatatanPimpinan = findViewById(R.id.tvCatatanPimpinan)
+        layoutBerkasBukti = findViewById(R.id.layoutBerkasBukti)
+        tvBerkasBuktiLabel = findViewById(R.id.tvBerkasBuktiLabel)
+        btnBukaBerkas = findViewById(R.id.btnBukaBerkas)
         btnEditPengajuan = findViewById(R.id.btnEditPengajuan)
         btnHapusPengajuan = findViewById(R.id.btnHapusPengajuan)
 
@@ -88,6 +99,17 @@ class DetailPengajuanActivity : AppCompatActivity() {
             tvCatatanPimpinan.text = keteranganPimpinan
         } else {
             tvCatatanPimpinan.visibility = View.GONE
+        }
+
+        // Handle berkas bukti display
+        if (berkasBukti.isNotBlank()) {
+            layoutBerkasBukti.visibility = View.VISIBLE
+            tvBerkasBuktiLabel.text = "Bukti Dokumen"
+            btnBukaBerkas.setOnClickListener {
+                openBerkasBukti()
+            }
+        } else {
+            layoutBerkasBukti.visibility = View.GONE
         }
 
         setStatusBadge(status)
@@ -135,6 +157,21 @@ class DetailPengajuanActivity : AppCompatActivity() {
                 tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_pending)
                 tvStatusBadge.setTextColor(Color.parseColor("#856404"))
             }
+        }
+    }
+
+    private fun openBerkasBukti() {
+        if (berkasBukti.isBlank()) {
+            Toast.makeText(this, "File bukti tidak tersedia.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse(berkasBukti)
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, "Tidak dapat membuka file. Pastikan file masih tersedia.", Toast.LENGTH_SHORT).show()
         }
     }
 

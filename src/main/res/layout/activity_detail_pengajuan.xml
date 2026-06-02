@@ -153,6 +153,34 @@
                         android:textColor="@color/black"
                         android:textSize="14sp" />
 
+                    <LinearLayout
+                        android:id="@+id/layoutBerkasBukti"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/tvBerkasBuktiLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Bukti Dokumen"
+                            android:textColor="#757575"
+                            android:textSize="12sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBukaBerkas"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="8dp"
+                            android:text="Lihat Bukti Dokumen"
+                            android:textAllCaps="false"
+                            android:textStyle="bold"
+                            app:backgroundTint="@color/avatar_blue"
+                            app:cornerRadius="10dp" />
+                    </LinearLayout>
+
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

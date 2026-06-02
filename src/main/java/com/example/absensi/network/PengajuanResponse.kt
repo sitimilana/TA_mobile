@@ -16,5 +16,6 @@ data class CutiItem(
     @SerializedName("alasan") val alasan: String?,
     @SerializedName("status") val status: String?,
     @SerializedName("tanggal_pengajuan") val tanggalPengajuan: String?,
-    @SerializedName("keterangan_pimpinan") val keteranganPimpinan: String?
+    @SerializedName("keterangan_pimpinan") val keteranganPimpinan: String?,
+    @SerializedName("berkas_bukti") val berkasBukti: String?
 )

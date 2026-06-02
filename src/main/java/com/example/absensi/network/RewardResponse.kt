@@ -14,7 +14,9 @@ data class DashboardData(
     @SerializedName("is_top_performer_bulan_ini") val isTopPerformer: Boolean,
     @SerializedName("skor_bulan_ini") val skorBulanIni: Int,
     @SerializedName("chart_data") val chartData: List<ChartItem>,
-    @SerializedName("reward_history") val rewardHistory: List<RewardItem> // Menampung riwayat penilaian
+    @SerializedName("reward_history") val rewardHistory: List<RewardItem>, // Menampung riwayat penilaian
+    @SerializedName("recent_rewards") val recentRewards: List<RewardItem>?,
+    @SerializedName("latest_recent_reward") val latestRecentReward: RewardItem?
 )
 
 // 3. Item untuk Grafik/Chart Kinerja
