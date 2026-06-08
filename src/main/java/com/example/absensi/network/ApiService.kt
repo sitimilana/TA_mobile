@@ -101,11 +101,24 @@ interface ApiService {
         @Path("id") idGaji: Int
     ): Call<SalaryDetailResponse>
 
-    // ============================================================
-    // ENDPOINT UNTUK AMBIL SISA CUTI KARYAWAN
-    // ============================================================
     @GET("cuti/sisa")
     fun getSisaCuti(
         @Header("Authorization") token: String
     ): Call<SisaCutiResponse>
+
+    @Multipart
+    @POST("update-foto")
+    suspend fun updateFoto(@Part foto: MultipartBody.Part): ApiMessageResponse
+
+    @GET("profil")
+    fun getProfil(@Header("Authorization") token: String): Call<ProfilResponse>
+
+    @FormUrlEncoded
+    @POST("change-password")
+    fun changePassword(
+        @Header("Authorization") token: String,
+        @Field("password_lama") passwordLama: String,
+        @Field("password_baru") passwordBaru: String,
+        @Field("konfirmasi_password") konfirmasiPassword: String
+    ): Call<ApiMessageResponse>
 }

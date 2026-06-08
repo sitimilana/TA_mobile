@@ -42,8 +42,11 @@
         <activity android:name=".DetailGajiActivity" android:exported="false" />
         <activity
             android:name=".DetailPenilaianActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+            android:exported="false"/>
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false"/>
+        <activity android:name=".ChangePasswordActivity" android:exported="false" />
     </application>
 
 </manifest>

@@ -118,8 +118,7 @@ class PengajuanActivity : AppCompatActivity() {
         etNama.setText(namaLengkap)
         etDivisi.setText(divisi)
 
-        // --- 3. Setup Spinner (Disederhanakan menjadi 3 Kategori) ---
-        val listKeterangan = arrayOf("Cuti", "Izin", "Sakit")
+        val listKeterangan = arrayOf("Cuti", "Izin", "Sakit", "Cuti Kehamilan")
         val adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listKeterangan)
         spinnerKeterangan.adapter = adapterSpinner
 
@@ -131,6 +130,13 @@ class PengajuanActivity : AppCompatActivity() {
                 etTanggalMulai.setText("")
                 etTanggalSelesai.setText("")
                 when (jenisPengajuan) {
+                    "cuti kehamilan" -> {
+                        layoutUpload.visibility = View.VISIBLE
+                        etTanggalSelesai.isEnabled = false
+                        etTanggalSelesai.isFocusable = false
+                        tvUploadHint.text = "(Wajib dilampirkan surat keterangan hamil)"
+                        tvUploadHint.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                    }
                     "sakit" -> {
                         layoutUpload.visibility = View.VISIBLE
                         etTanggalSelesai.isEnabled = true
@@ -160,18 +166,40 @@ class PengajuanActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // --- 4. Setup Kalender ---
+        //Tanggal Mulai
         etTanggalMulai.setOnClickListener {
             showDatePicker(true) { date ->
                 etTanggalMulai.setText(date)
                 val jenisPengajuan = spinnerKeterangan.selectedItem.toString().lowercase()
-                if (jenisPengajuan == "cuti") {
-                    etTanggalSelesai.setText(date)
-                }else{
-                    etTanggalSelesai.setText("")
+
+                when (jenisPengajuan) {
+                    "cuti" -> {
+                        // Cuti reguler: Tanggal selesai otomatis sama dengan tanggal mulai (1 hari)
+                        etTanggalSelesai.setText(date)
+                    }
+                    "cuti kehamilan" -> {
+                        // Cuti kehamilan: Otomatis tambah 89 hari ke depan (Total 90 hari)
+                        try {
+                            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            val calendar = java.util.Calendar.getInstance()
+                            calendar.time = sdf.parse(date)!!
+
+                            // Tambah 89 hari
+                            calendar.add(java.util.Calendar.DAY_OF_MONTH, 89)
+
+                            val tanggalSelesai = sdf.format(calendar.time)
+                            etTanggalSelesai.setText(tanggalSelesai)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    else -> {
+                        etTanggalSelesai.setText("")
+                    }
                 }
             }
         }
+        //Tanggal Selesai
         etTanggalSelesai.setOnClickListener {
             if (etTanggalMulai.text.toString().isEmpty()) {
                 Toast.makeText(this, "Silakan pilih Tanggal Mulai terlebih dahulu", Toast.LENGTH_SHORT).show()
@@ -189,6 +217,7 @@ class PengajuanActivity : AppCompatActivity() {
 
             isInitializingForm = true
             when {
+                jenisEdit.contains("cuti kehamilan", ignoreCase = true) -> spinnerKeterangan.setSelection(3)
                 jenisEdit.contains("sakit", ignoreCase = true) -> spinnerKeterangan.setSelection(2)
                 jenisEdit.contains("izin", ignoreCase = true) -> spinnerKeterangan.setSelection(1)
                 else -> spinnerKeterangan.setSelection(0)
@@ -198,6 +227,13 @@ class PengajuanActivity : AppCompatActivity() {
             etAlasanCuti.setText(alasanEdit)
 
             when {
+                jenisEdit.contains("cuti kehamilan", ignoreCase = true) -> {
+                    layoutUpload.visibility = View.VISIBLE
+                    etTanggalSelesai.isEnabled = true
+                    etTanggalSelesai.isFocusable = false
+                    tvUploadHint.text = "(Wajib dilampirkan surat keterangan hamil)"
+                    tvUploadHint.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
+                }
                 jenisEdit.contains("sakit", ignoreCase = true) -> {
                     layoutUpload.visibility = View.VISIBLE
                     etTanggalSelesai.isEnabled = true
@@ -250,16 +286,25 @@ class PengajuanActivity : AppCompatActivity() {
         val waktuSekarangMs = System.currentTimeMillis() - 1000
 
         if (isTanggalMulai) {
-            // Izin dan Sakit boleh hari ini
-            if (jenisPengajuan == "sakit" || jenisPengajuan == "izin") {
-                datePickerDialog.datePicker.minDate = waktuSekarangMs
-            } else {
-                // Cuti wajib minimal H-1 (besok)
-                val besok = Calendar.getInstance()
-                besok.add(Calendar.DAY_OF_MONTH, 1)
-                datePickerDialog.datePicker.minDate = besok.timeInMillis
+            when (jenisPengajuan) {
+                "sakit", "izin" -> {
+                    datePickerDialog.datePicker.minDate = waktuSekarangMs
+                }
+                "cuti kehamilan" -> {
+                    // Wajib minimal H-10
+                    val h10 = Calendar.getInstance()
+                    h10.add(Calendar.DAY_OF_MONTH, 10)
+                    datePickerDialog.datePicker.minDate = h10.timeInMillis
+                }
+                else -> {
+                    // Cuti reguler wajib minimal H-1 (besok)
+                    val besok = Calendar.getInstance()
+                    besok.add(Calendar.DAY_OF_MONTH, 1)
+                    datePickerDialog.datePicker.minDate = besok.timeInMillis
+                }
             }
-        } else {
+        }
+        else {
             // Tanggal selesai minimal hari ini
             datePickerDialog.datePicker.minDate = waktuSekarangMs
         }
@@ -299,6 +344,40 @@ class PengajuanActivity : AppCompatActivity() {
         if (jenisPengajuan.equals("Sakit", ignoreCase = true) && imageFile == null) {
             Toast.makeText(this, "Surat keterangan dokter/sakit WAJIB dilampirkan!", Toast.LENGTH_LONG).show()
             return
+        }
+        if (jenisPengajuan.equals("Cuti Kehamilan", ignoreCase = true)) {
+            if (imageFile == null) {
+                Toast.makeText(this, "Surat keterangan hamil WAJIB dilampirkan!", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            try {
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val dateMulai = sdf.parse(tglMulai)
+                val dateSelesai = sdf.parse(tglSelesai)
+
+                val today = java.util.Calendar.getInstance()
+                today.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                today.set(java.util.Calendar.MINUTE, 0)
+                today.set(java.util.Calendar.SECOND, 0)
+                today.set(java.util.Calendar.MILLISECOND, 0)
+
+                // Hitung selisih hari pengajuan ke hari pelaksanaan
+                val diffHariAwal = (dateMulai!!.time - today.timeInMillis) / (1000 * 60 * 60 * 24)
+                if (diffHariAwal < 10) {
+                    Toast.makeText(this, "Cuti Kehamilan wajib diajukan minimal H-10!", Toast.LENGTH_LONG).show()
+                    return
+                }
+
+                // Hitung durasi
+                val durasi = ((dateSelesai!!.time - dateMulai.time) / (1000 * 60 * 60 * 24)) + 1
+                if (durasi > 90) {
+                    Toast.makeText(this, "Durasi maksimal Cuti Kehamilan adalah 90 hari!", Toast.LENGTH_LONG).show()
+                    return
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         val sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE)

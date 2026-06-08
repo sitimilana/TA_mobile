@@ -66,4 +66,5 @@ dependencies {
     implementation("androidx.camera:camera-view:1.4.0")
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.google.android.material:material:1.9.0")
 }

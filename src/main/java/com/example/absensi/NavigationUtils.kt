@@ -6,11 +6,6 @@ import android.view.View
 import android.widget.TextView
 
 object NavigationUtils {
-    
-    /**
-     * Setup the header with real user data from SharedPreferences
-     * This should be called in onCreate() of any activity that uses layout_header
-     */
     fun setupHeaderWithUserData(activity: Activity) {
         try {
             val tvWelcomeName: TextView? = activity.findViewById(R.id.tvWelcomeName)
@@ -20,10 +15,16 @@ object NavigationUtils {
                 val sharedPref = activity.getSharedPreferences("AppPrefs", Activity.MODE_PRIVATE)
                 val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan") ?: "Karyawan"
                 val divisi = sharedPref.getString("DIVISI", "Staff") ?: "Staff"
-                
+                val ivProfile: View? = activity.findViewById(R.id.ivProfile)
                 tvWelcomeName?.text = "Selamat Datang,\n$namaLengkap"
                 tvRole?.text = divisi
+
+                 ivProfile?.setOnClickListener {
+                    val intent = Intent(activity, ProfileActivity::class.java)
+                    activity.startActivity(intent)
+                }
             }
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
