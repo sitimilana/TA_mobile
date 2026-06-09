@@ -58,7 +58,6 @@ interface ApiService {
     fun updateCuti(
         @Header("Authorization") token: String,
         @Path("id") idCuti: Int,
-        @Part("_method") method: RequestBody,
         @Part("tanggal_mulai") tglMulai: RequestBody,
         @Part("tanggal_selesai") tglSelesai: RequestBody,
         @Part("jenis_cuti") jenisCuti: RequestBody,
@@ -120,5 +119,12 @@ interface ApiService {
         @Field("password_lama") passwordLama: String,
         @Field("password_baru") passwordBaru: String,
         @Field("konfirmasi_password") konfirmasiPassword: String
+    ): Call<ApiMessageResponse>
+
+    @Multipart
+    @POST("update-foto")
+    fun updateFoto(
+        @Header("Authorization") token: String,
+        @Part foto: MultipartBody.Part
     ): Call<ApiMessageResponse>
 }

@@ -388,7 +388,6 @@ class PengajuanActivity : AppCompatActivity() {
         val reqTglSelesai = tglSelesai.toRequestBody("text/plain".toMediaTypeOrNull())
         val reqJenisCuti = jenisPengajuan.toRequestBody("text/plain".toMediaTypeOrNull())
         val reqAlasan = alasan.toRequestBody("text/plain".toMediaTypeOrNull())
-        val reqMethodOverride = "PUT".toRequestBody("text/plain".toMediaTypeOrNull())
 
         var fotoMultipart: MultipartBody.Part? = null
         if (imageFile != null) {
@@ -403,7 +402,6 @@ class PengajuanActivity : AppCompatActivity() {
             ApiConfig.getApiService().updateCuti(
                 bearerToken,
                 editCutiId,
-                reqMethodOverride,
                 reqTglMulai,
                 reqTglSelesai,
                 reqJenisCuti,

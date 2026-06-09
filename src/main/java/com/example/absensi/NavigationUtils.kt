@@ -3,25 +3,49 @@ package com.example.absensi
 import android.app.Activity
 import android.content.Intent
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide // Pastikan import Glide ini ada
 
 object NavigationUtils {
     fun setupHeaderWithUserData(activity: Activity) {
         try {
             val tvWelcomeName: TextView? = activity.findViewById(R.id.tvWelcomeName)
             val tvRole: TextView? = activity.findViewById(R.id.tvRole)
-            
+
+            // 1. Ubah tipe ivProfile menjadi ImageView
+            val ivProfile: ImageView? = activity.findViewById(R.id.ivProfile)
+
             if (tvWelcomeName != null || tvRole != null) {
                 val sharedPref = activity.getSharedPreferences("AppPrefs", Activity.MODE_PRIVATE)
                 val namaLengkap = sharedPref.getString("NAMA_LENGKAP", "Karyawan") ?: "Karyawan"
                 val divisi = sharedPref.getString("DIVISI", "Staff") ?: "Staff"
-                val ivProfile: View? = activity.findViewById(R.id.ivProfile)
+
+                // 2. Ambil URL foto profil dari SharedPreferences
+                val fotoUrl = sharedPref.getString("FOTO_PROFIL", "")
+
                 tvWelcomeName?.text = "Selamat Datang,\n$namaLengkap"
                 tvRole?.text = divisi
 
-                 ivProfile?.setOnClickListener {
-                    val intent = Intent(activity, ProfileActivity::class.java)
-                    activity.startActivity(intent)
+                // 3. LOGIKA GLIDE UNTUK MENAMPILKAN FOTO DI HEADER
+                if (ivProfile != null) {
+                    if (!fotoUrl.isNullOrEmpty()) {
+                        // Jika URL foto ada, tampilkan pakai Glide
+                        Glide.with(activity)
+                            .load(fotoUrl)
+                            .placeholder(R.drawable.profile) // Gambar default saat proses loading
+                            .error(R.drawable.profile)       // Gambar default jika url gagal dimuat
+                            .into(ivProfile)
+                    } else {
+                        // Jika belum ada foto, tampilkan ikon default
+                        ivProfile.setImageResource(R.drawable.profile)
+                    }
+
+                    // Fungsi klik untuk masuk ke halaman profil tetap dipertahankan
+                    ivProfile.setOnClickListener {
+                        val intent = Intent(activity, ProfileActivity::class.java)
+                        activity.startActivity(intent)
+                    }
                 }
             }
 
@@ -29,7 +53,7 @@ object NavigationUtils {
             e.printStackTrace()
         }
     }
-    
+
     fun setupBottomNav(activity: Activity) {
         // Find containers for larger touch targets
         val homeBtn = activity.findViewById<View>(R.id.nav_home_container)

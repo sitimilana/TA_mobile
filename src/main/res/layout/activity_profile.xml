@@ -54,6 +54,15 @@
                     app:tint="@color/white" />
             </FrameLayout>
 
+            <Button
+                android:id="@+id/btnSimpanFoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Simpan Foto"
+                android:visibility="gone"
+                android:backgroundTint="#4CAF50"
+                app:cornerRadius="8dp" />
             <TextView android:id="@+id/tvProfilNama" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Nama Karyawan" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/black" />
             <TextView android:id="@+id/tvProfilRole" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Divisi" android:textColor="#666666" />
 

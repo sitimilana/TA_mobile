@@ -67,4 +67,7 @@ dependencies {
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("com.google.android.material:material:1.9.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("id.zelory:compressor:3.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 }
