@@ -97,6 +97,7 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        NavigationUtils.setupHeaderWithUserData(this)
         fetchPresensiHariIni()
         fetchMyRewardData()
         fetchDataKinerjaChart()
