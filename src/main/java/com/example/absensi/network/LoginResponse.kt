@@ -14,5 +14,6 @@ data class UserModel(
     @SerializedName("username") val username: String?,
     @SerializedName("nama_lengkap") val namaLengkap: String?,
     @SerializedName("divisi") val divisi: String?,
-    @SerializedName("tanggal_masuk") val tanggalMasuk: String? // ← Tambahan: untuk filter riwayat
+    @SerializedName("tanggal_masuk") val tanggalMasuk: String?,
+    @SerializedName("is_first_login") val isFirstLogin: Boolean?
 )
